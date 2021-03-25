@@ -65,33 +65,13 @@ public class Nodes
             		
             	}
             	
-	       /* map.getMap().get(key).forEach((k, v) -> 
-	        { 
-
-	        	if(i[0]==0) 
-	    		{
-	    			node_name[0]= k;
-	    		}
-	        	if(i[0]==1) 
-	    		{
-		        	if(k.equals("derived_from"))
-	        	    {  
-		        		//System.out.println("ok");
-		        		derived_from[0]=k;
-	        	    }
-	    		}
-        		//System.out.println(i[0]);
-
-	        } );*/
-    	//i[0]=i[0]+1;
-
-
-	    }
-    	
+     
 
 
     
      }
+		}
+    
     	ModelBuilder builder = new ModelBuilder();
 		builder.setNamespace("ex", "https://intelligence.csd.auth.gr/ontologies/tosca/")
 		      .subject("ex:" + node_name)
@@ -113,4 +93,6 @@ public class Nodes
 		      }
         Model m = builder.build();
 		m.forEach(System.out::println);
-    }}
+    
+}
+}
