@@ -2,7 +2,8 @@ package tosca;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
+import java.lang.Object;
+import org.eclipse.rdf4j.model.vocabulary.LIST; 
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
@@ -18,6 +19,7 @@ public class Nodes {
 
 	void nodeTypes() 
 	{
+		
 		String node_name = null;
 		Object derived_from = null;
 		HashMap<String, Object> map2 = new HashMap<>();
@@ -58,18 +60,17 @@ public class Nodes {
 					{
 						// fourth_level= (HashMap<String, Object>) third_level.get(key3);
 						attribute_names.add(key3);
+
 						// System.out.println("F" + fourth_level);
 
 				    }
 				} 
 				else if (key2.equals("capabilities")) 
 				{
-					third_level = (HashMap<String, Object>) second_level.get("attributes");
+					third_level = (HashMap<String, Object>) second_level.get("capabilities");
 					for (String key3 : third_level.keySet()) 
 					{
-						
 						capabilities_names.add(key3);
-
 				    }
 				}
 
@@ -82,7 +83,7 @@ public class Nodes {
 		IRI toscaDefault = null;
 		IRI toscaType = null;
 		IRI toscaProperty= null;
-		
+
 		if(counter==0)
 		{
 		 ex = "https://intelligence.csd.auth.gr/ontologies/tosca/";
@@ -163,8 +164,7 @@ public class Nodes {
 			IRI attribute = Values.iri(ex,attribute_names.get(j));
 			builder.add(attribute,RDF.TYPE,"owl:DatatypeProperty");
 
-			
-			if (third_level.get(attribute_names.get(j)) != null) 
+		   if (third_level.get(attribute_names.get(j)) != null) 
 			{
 				fourth_level = (HashMap<String, Object>) third_level.get(attribute_names.get(j));
 				if (fourth_level.get("type") != null) 
@@ -179,6 +179,7 @@ public class Nodes {
 					{
 						builder.add(attribute,toscaType,fourth_level.get("type"));
 
+
 					}
 				}
 				if (fourth_level.get("description") != null) 
@@ -186,15 +187,10 @@ public class Nodes {
 					builder.add(attribute,tosca_description,Values.literal(fourth_level.get("description")));
 				}
 				
-					builder.add(attribute,toscaProperty,"false");
+				builder.add(attribute,toscaProperty,"false");
 				
-			}
-			
-			if (third_level.get(capabilities_names.get(j)) != null) 
-			{
-				
-				
-			}
+		}
+		
 			
 			/**
 			 * Annotations are similar to other properties:
@@ -203,6 +199,46 @@ public class Nodes {
 			 */	
 			
 		}
+		System.out.println(third_level);
+		IRI capabilities= Values.iri(ex,"capabilities");
+		for (int j = 0; j < capabilities_names.size(); j++) 
+		{
+		 IRI capability = Values.iri(ex,capabilities_names.get(j));
+		 builder.add(capability,RDF.TYPE,"owl:ObjectProperty");
+		 //System.out.println(fourth_level.get(third_level.get(capabilities_names.get(j))));
+		 fourth_level = (HashMap<String, Object>) third_level.get(capabilities_names.get(j));
+		 if (fourth_level.get("type") != null) 
+	     {
+	 			builder.add(capability,RDFS.RANGE,fourth_level.get("type"));
+		 }
+		 if (fourth_level.get("valid_source_types") != null) 
+	     {
+	 	        builder.add(capability,RDF.LIST,fourth_level.get("valid_source_types"));
+		 }
+		 
+		 
+			 builder.add(RDFS.SUBCLASSOF, OWL.RESTRICTION);
+			 builder.add(RDF.PROPERTY, capabilities);
+		     builder.add(capabilities,OWL.SOMEVALUESFROM,capability);
+		     builder.add(capability,OWL.SOMEVALUESFROM,fourth_level.get("type"));
+			 
+		 
+
+		 
+		 if (fourth_level.get("required") != null) 
+		 {
+			
+			 if (fourth_level.get("required").equals("true")) 
+			 {
+			 }
+			 else if(fourth_level.get("required").equals("false")) 
+			 {
+				 
+
+			 }
+		 }
+		}
+
 		Model m = builder.build();
 		m.forEach(System.out::println);
 		}
