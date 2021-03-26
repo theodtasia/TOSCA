@@ -201,6 +201,7 @@ public class Nodes {
 			 * 1. we need to define the annotation property, e.g. <our_annotation_property, type, owl:AnnotationProperty>
 			 * 2. then we need to use it, e.g. <our class, our_property, value>
 			 */	
+			
 		}
 		Model m = builder.build();
 		m.forEach(System.out::println);
