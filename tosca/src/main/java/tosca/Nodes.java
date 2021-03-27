@@ -19,7 +19,6 @@ public class Nodes {
 
 	void nodeTypes() 
 	{
-		
 		String node_name = null;
 		Object derived_from = null;
 		HashMap<String, Object> map2 = new HashMap<>();
@@ -30,6 +29,9 @@ public class Nodes {
 		HashMap<String, Object> third_level = map2;
 		HashMap<String, Object> fourth_level = map2;
 		map2 = map.getMap().get("node_types");
+    	final int c[]= {0};
+    	final int a[]= {0};
+    	final int p[]= {0};
 		for (String key : map2.keySet()) 
 		{
 			node_name = key;
@@ -46,7 +48,8 @@ public class Nodes {
 				} 
 				else if (key2.equals("properties"))
 				{
-					third_level = (HashMap<String, Object>) second_level.get("properties");
+					third_level = (HashMap<String, Object>) second_level.get("properties");	
+					p[0]=1;
 					for (String key3 : third_level.keySet()) 
 					{
 						properties_names.add(key3);
@@ -67,6 +70,7 @@ public class Nodes {
 				} 
 				else if (key2.equals("capabilities")) 
 				{
+					c[0]=1;	
 					third_level = (HashMap<String, Object>) second_level.get("capabilities");
 					for (String key3 : third_level.keySet()) 
 					{
@@ -75,168 +79,206 @@ public class Nodes {
 				}
 
 		    }
+			
 		
-		
-		int counter = 0;
-		String ex = null;
-		IRI tosca_description = null;
-		IRI toscaDefault = null;
-		IRI toscaType = null;
-		IRI toscaProperty= null;
-
-		if(counter==0)
-		{
-		 ex = "https://intelligence.csd.auth.gr/ontologies/tosca/";
-		 tosca_description = Values.iri(ex,"description");
-		 toscaDefault=Values.iri(ex,"toscaDefault");
-		 toscaProperty = Values.iri(ex,"toscaProperty");
-   		 toscaType = Values.iri(ex,"toscaType");
-
-		}
-		counter++;
-		
-		ModelBuilder builder = new ModelBuilder();
-		builder.setNamespace("ex", "https://intelligence.csd.auth.gr/ontologies/tosca/").subject("ex:" + node_name)
-				.add(RDF.TYPE, "owl:Class")
-				.add(RDFS.SUBCLASSOF, "https://intelligence.csd.auth.gr/ontologies/tosca/" + derived_from)
-		        .add(tosca_description,RDF.TYPE,"owl:AnnotationProperty")
-		        .add(tosca_description,RDFS.RANGE,"string")
-		        .add(toscaDefault,RDF.TYPE,"owl:AnnotationProperty")
-		        .add(toscaDefault,RDFS.RANGE,"string")
-		        .add(toscaProperty,RDF.TYPE,"owl:AnnotationProperty")
-		        .add(toscaProperty,RDFS.RANGE,"boolean");
-    
-
-		/**
-		 * Above, the same "subject" is used for all "add" definitions. So, the two "add" have as subject the ex:node_name:
-		 * 
-		 *  <ex:node_name type owl:Class>
-		 *  <ex:node_name rdfs:subClassOf <drivedFrom>
-		 *  
-		 */
-		
-		for (int j = 0; j < properties_names.size(); j++) 
-		{
-			IRI properties = Values.iri(ex,properties_names.get(j));
-			builder.add(properties,RDF.TYPE,"owl:DatatypeProperty");
-			if (third_level.get(properties_names.get(j)) != null) 
+			int counter = 0;
+			String ex = null;
+			IRI tosca_description = null;
+			IRI toscaDefault = null;
+			IRI toscaType = null;
+			IRI toscaProperty= null;
+			if(counter==0)
 			{
-				fourth_level = (HashMap<String, Object>) third_level.get(properties_names.get(j));
+				ex = "https://intelligence.csd.auth.gr/ontologies/tosca/";
+				tosca_description = Values.iri(ex,"description");
+				toscaDefault=Values.iri(ex,"toscaDefault");
+				toscaProperty = Values.iri(ex,"toscaProperty");
+				toscaType = Values.iri(ex,"toscaType");
+				
 
-				// check if the type is "normal" datatype or toscaType
-				if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
-				{
-
-					builder.add(properties,RDFS.RANGE,fourth_level.get("type"));
-					
-				}
-				else
-				{
-					builder.add(properties,toscaType,fourth_level.get("type"));
-
-				}
-				if (fourth_level.get("description") != null) 
-				{
-				 builder.add(properties,tosca_description,Values.literal(fourth_level.get("description")));
-				}
-				if (fourth_level.get("default") != null) 
-				{
-				  builder.add(properties,toscaDefault,Values.literal(fourth_level.get("default")));
-
-				}
-				builder.add(properties,toscaProperty,"true");
+				counter++;
 			}
+
+			ModelBuilder builder = new ModelBuilder();
+			builder.setNamespace("ex", "https://intelligence.csd.auth.gr/ontologies/tosca/").subject("ex:" + node_name)
+			.add(RDF.TYPE, "owl:Class")
+			.add(RDFS.SUBCLASSOF, "https://intelligence.csd.auth.gr/ontologies/tosca/" + derived_from)
+	        .add(tosca_description,RDF.TYPE,"owl:AnnotationProperty")
+	        .add(tosca_description,RDFS.RANGE,"string")
+	        .add(toscaDefault,RDF.TYPE,"owl:AnnotationProperty")
+	        .add(toscaDefault,RDFS.RANGE,"string")
+	        .add(toscaProperty,RDF.TYPE,"owl:AnnotationProperty")
+	        .add(toscaProperty,RDFS.RANGE,"boolean");
+
+
+			//for properties
+			if(p[0]!=0)
+			{
+				p[0]=0;
+				third_level = (HashMap<String, Object>) second_level.get("properties");
+
+				for (int j = 0; j < properties_names.size(); j++) 
+				{
+					IRI properties = Values.iri(ex,properties_names.get(j));
+					builder.add(properties,RDF.TYPE,"owl:DatatypeProperty");
+					if (third_level.get(properties_names.get(j)) != null) 
+					{
+						fourth_level = (HashMap<String, Object>) third_level.get(properties_names.get(j));
+						//System.out.println(fourth_level);
+						
+						// check if the type is "normal" datatype or toscaType
+						if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
+						{
+
+							builder.add(properties,RDFS.RANGE,fourth_level.get("type"));
+						
+						}
+						else
+						{
+							builder.add(properties,toscaType,fourth_level.get("type"));
+
+						}
+						if (fourth_level.get("description") != null) 
+						{
+							builder.add(properties,tosca_description,Values.literal(fourth_level.get("description")));
+						}
+						if (fourth_level.get("default") != null) 
+						{
+							builder.add(properties,toscaDefault,Values.literal(fourth_level.get("default")));
+
+						}
+						if (fourth_level.get("required") != null) 
+						{											
+							if(fourth_level.get("required").equals(true))
+							{
+								builder.add(ex,RDFS.SUBCLASSOF,OWL.RESTRICTION);
+								builder.add(OWL.RESTRICTION, RDF.PROPERTY);
+								builder.add(RDF.PROPERTY, properties);
+								builder.add(properties,OWL.MINQUALIFIEDCARDINALITY, "0");
+
+							}
+							else if(fourth_level.get("required").equals(false))
+							{
+								builder.add(node_name,RDFS.SUBCLASSOF);
+								builder.add(OWL.RESTRICTION, RDF.PROPERTY);
+								builder.add(RDF.PROPERTY, properties);
+								builder.add(properties,OWL.MINQUALIFIEDCARDINALITY, "1");
+
+							}
+						}
+		     			
+						builder.add(properties,toscaProperty,"true");
+					}
+					
+				}	
+			}
+		
+			//for attributes
+			if(a[0]!=0)
+			{
+				a[0]=0;
+				third_level = (HashMap<String, Object>) second_level.get("attributes");
+				for (int j = 0; j < attribute_names.size(); j++) 
+				{
+					IRI attribute = Values.iri(ex,attribute_names.get(j));
+					builder.add(attribute,RDF.TYPE,"owl:DatatypeProperty");
+
+					if (third_level.get(attribute_names.get(j)) != null) 
+					{
+						fourth_level = (HashMap<String, Object>) third_level.get(attribute_names.get(j));
+						if (fourth_level.get("type") != null) 
+						{
+							if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
+							{
+
+								builder.add(attribute,RDFS.RANGE,fourth_level.get("type"));
 			
+							}
+							else
+							{
+								builder.add(attribute,toscaType,fourth_level.get("type"));
+
+
+							}
+						}
+						if (fourth_level.get("description") != null) 
+						{
+							builder.add(attribute,tosca_description,Values.literal(fourth_level.get("description")));
+						}
+				
+						builder.add(attribute,toscaProperty,"false");
+						if (fourth_level.get("required") != null) 
+						{											
+							if(fourth_level.get("required").equals(true))
+							{
+								builder.add(ex,RDFS.SUBCLASSOF);
+								builder.add(OWL.RESTRICTION, RDF.PROPERTY);
+								builder.add(RDF.PROPERTY, attribute);
+								builder.add(attribute,OWL.MINQUALIFIEDCARDINALITY, "0");
+
+							}
+							else if(fourth_level.get("required").equals(false))
+							{
+								builder.add(ex,RDFS.SUBCLASSOF);
+								builder.add(OWL.RESTRICTION, RDF.PROPERTY);
+								builder.add(RDF.PROPERTY, attribute);
+								builder.add(attribute,OWL.MINQUALIFIEDCARDINALITY, "1");
+
+							}
+						}
+				
+				}
+		
+			
+			}
 		}
 		
-		
-		for (int j = 0; j < attribute_names.size(); j++) 
+		//for capabilities
+		if(c[0]!=0)
 		{
-			// System.out.println(third_level.get(third_level.get(attribute_names.get(j))));
-			/**
-			 * Properties are defined as objects as well. So for example, the property public_address should be defined as:
-			 * <public_address, type, owl:DatatypeProperty>. So, we can not simply "add" this to the builder, since all these definitions will be added to the node_name.
-			 * What needs to be done is:
-			 * 1. create the property (the datatype property in this case
-			 * 2. add the domain/range value or any other characteristics we want
-			 */
-			
-			IRI attribute = Values.iri(ex,attribute_names.get(j));
-			builder.add(attribute,RDF.TYPE,"owl:DatatypeProperty");
-
-		   if (third_level.get(attribute_names.get(j)) != null) 
+			c[0]=0;
+			third_level = (HashMap<String, Object>) second_level.get("capabilities");
+			IRI capabilities= Values.iri(ex,"capabilities");
+			for (int j = 0; j < capabilities_names.size(); j++) 
 			{
-				fourth_level = (HashMap<String, Object>) third_level.get(attribute_names.get(j));
+				IRI capability = Values.iri(ex,capabilities_names.get(j));
+				builder.add(capability,RDF.TYPE,"owl:ObjectProperty");
+				//System.out.println(fourth_level.get(third_level.get(capabilities_names.get(j))));
+				fourth_level = (HashMap<String, Object>) third_level.get(capabilities_names.get(j));
 				if (fourth_level.get("type") != null) 
 				{
-					if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
-					{
-
-						builder.add(attribute,RDFS.RANGE,fourth_level.get("type"));
-						
-					}
-					else
-					{
-						builder.add(attribute,toscaType,fourth_level.get("type"));
-
-
-					}
+					builder.add(capability,RDFS.RANGE,fourth_level.get("type"));
 				}
-				if (fourth_level.get("description") != null) 
+				if (fourth_level.get("valid_source_types") != null) 
 				{
-					builder.add(attribute,tosca_description,Values.literal(fourth_level.get("description")));
+					builder.add(capability,RDF.LIST,fourth_level.get("valid_source_types"));
 				}
-				
-				builder.add(attribute,toscaProperty,"false");
-				
-		}
-		
-			
-			/**
-			 * Annotations are similar to other properties:
-			 * 1. we need to define the annotation property, e.g. <our_annotation_property, type, owl:AnnotationProperty>
-			 * 2. then we need to use it, e.g. <our class, our_property, value>
-			 */	
-			
-		}
-		System.out.println(third_level);
-		IRI capabilities= Values.iri(ex,"capabilities");
-		for (int j = 0; j < capabilities_names.size(); j++) 
-		{
-		 IRI capability = Values.iri(ex,capabilities_names.get(j));
-		 builder.add(capability,RDF.TYPE,"owl:ObjectProperty");
-		 //System.out.println(fourth_level.get(third_level.get(capabilities_names.get(j))));
-		 fourth_level = (HashMap<String, Object>) third_level.get(capabilities_names.get(j));
-		 if (fourth_level.get("type") != null) 
-	     {
-	 			builder.add(capability,RDFS.RANGE,fourth_level.get("type"));
-		 }
-		 if (fourth_level.get("valid_source_types") != null) 
-	     {
-	 	        builder.add(capability,RDF.LIST,fourth_level.get("valid_source_types"));
-		 }
+		 	 
 		 
-		 
-			 builder.add(RDFS.SUBCLASSOF, OWL.RESTRICTION);
-			 builder.add(RDF.PROPERTY, capabilities);
-		     builder.add(capabilities,OWL.SOMEVALUESFROM,capability);
-		     builder.add(capability,OWL.SOMEVALUESFROM,fourth_level.get("type"));
-			 
-		 
+		     	if (fourth_level.get("required") != null) 
+				{											
+					if(fourth_level.get("required").equals(true))
+					{
+						builder.add(node_name,RDFS.SUBCLASSOF);
+						builder.add(OWL.RESTRICTION, RDF.PROPERTY);
+						builder.add(RDF.PROPERTY, capability);
+						builder.add(capability,OWL.MINQUALIFIEDCARDINALITY, "0");
 
-		 
-		 if (fourth_level.get("required") != null) 
-		 {
-			
-			 if (fourth_level.get("required").equals("true")) 
-			 {
-			 }
-			 else if(fourth_level.get("required").equals("false")) 
-			 {
-				 
+					}
+					else if(fourth_level.get("required").equals(false))
+					{
+						builder.add(node_name,RDFS.SUBCLASSOF);
+						builder.add(OWL.RESTRICTION, RDF.PROPERTY);
+						builder.add(RDF.PROPERTY, capability);
+						builder.add(capability,OWL.MINQUALIFIEDCARDINALITY, "0");
 
-			 }
-		 }
+					}
+				}
+		     	builder.add(RDFS.SUBCLASSOF, OWL.RESTRICTION);
+				builder.add(RDF.PROPERTY, capabilities);
+				builder.add(capabilities,OWL.SOMEVALUESFROM,capability);
+		     	builder.add(capability,OWL.SOMEVALUESFROM,fourth_level.get("type"));
+			}
 		}
 
 		Model m = builder.build();
