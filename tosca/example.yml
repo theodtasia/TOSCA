@@ -17,7 +17,6 @@ data_types:
    remote_ip_prefix:  
     default: "0.0.0.0/0" 
     required: true 
-    type: string
 
 node_types:   
  sodalite.nodes.DockerHost:  

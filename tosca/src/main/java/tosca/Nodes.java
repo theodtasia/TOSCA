@@ -329,8 +329,8 @@ public class Nodes
 					Object type_host=fourth_level.get("type");
 					builder.add(capability,OWL.SOMEVALUESFROM,type_host);
 				  }
+				  
 				  else 	 //if there is valid source types 
-
 				  {
 					  //capabilities some ( host some tosca.capabilities.Node and host some 
 					  //(valid_source_types some [sodalite.nodes.DockerizedComponent])(
@@ -362,13 +362,11 @@ public class Nodes
 					  builder.add(valid_source_types,OWL.SOMEVALUESFROM,valid_host);
 					  
 
-
 				  }
 				}
 				
 			}
 		}
-
 		Model m = builder.build();
 		Rio.write(m, System.out, RDFFormat.TURTLE);
 		//m.forEach(System.out::println);
