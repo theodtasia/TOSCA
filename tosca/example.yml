@@ -22,7 +22,7 @@ node_types:
  sodalite.nodes.DockerHost:  
   derived_from: tosca.nodes.SoftwareComponent
   capabilities:  
-    host:  
+    ax:  
      type: tosca.capabilities.Node
      valid_source_types: [sodalite.nodes.DockerizedComponent]
      
