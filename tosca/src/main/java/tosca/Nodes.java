@@ -2,8 +2,8 @@ package tosca;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.lang.Object;
-import org.eclipse.rdf4j.model.vocabulary.LIST; 
+import java.util.Map.Entry;
+
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
@@ -12,11 +12,14 @@ import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-
-public class Nodes {
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.Rio;
+public class Nodes 
+{
 
 	Parse map = new Parse();
 
+	@SuppressWarnings("unchecked")
 	void nodeTypes() 
 	{
 		String node_name = null;
@@ -28,6 +31,8 @@ public class Nodes {
 		HashMap<String, Object> second_level = map2;
 		HashMap<String, Object> third_level = map2;
 		HashMap<String, Object> fourth_level = map2;
+		HashMap<String, Object> fifth_level = map2;
+		String ex = "https://intelligence.csd.auth.gr/ontologies/tosca/";
 		map2 = map.getMap().get("node_types");
     	final int c[]= {0};
     	final int a[]= {0};
@@ -35,16 +40,40 @@ public class Nodes {
 		for (String key : map2.keySet()) 
 		{
 			node_name = key;
+			IRI tosca_description = null;
+			IRI toscaDefault = null;
+			IRI toscaType = null;
+			IRI toscaProperty= null;
+			ModelBuilder builder = new ModelBuilder();
+			builder.setNamespace("ex", "https://intelligence.csd.auth.gr/ontologies/tosca/").subject("ex:" + node_name)
+			.add(RDF.TYPE, OWL.CLASS);
+			
+			tosca_description = Values.iri(ex,"tosca_description");
+			toscaDefault=Values.iri(ex,"toscaDefault");
+			toscaProperty = Values.iri(ex,"toscaProperty");
+			toscaType = Values.iri(ex, "toscaType");	
+			builder.subject(ex + node_name)
+			
+			.add(tosca_description,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
+			.add(tosca_description,RDFS.RANGE,"string")
+			.add(toscaDefault,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
+			.add(toscaDefault,RDFS.RANGE,"string")
+			.add(toscaProperty,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
+			.add(toscaProperty,RDFS.RANGE,"boolean");
+			
+			
 			//System.out.println(key);
-			second_level = (HashMap<String, Object>) map2.get(node_name);
+			second_level = ((HashMap<String, Object>) map2.get(node_name));
 			for (String key2 : second_level.keySet()) 
-			{
+			{	
+				
+				
 
 				//System.out.println(key2);
 				if (key2.equals("derived_from")) 
 				{
-					derived_from = second_level.get("derived_from"); // this is not map2 but second_level
-					//System.out.println(derived_from);
+					derived_from = second_level.get("derived_from"); 
+					builder.add(RDFS.SUBCLASSOF, "ex:"+ derived_from);
 				} 
 				else if (key2.equals("properties"))
 				{
@@ -59,6 +88,7 @@ public class Nodes {
 				else if (key2.equals("attributes")) 
 				{
 					third_level = (HashMap<String, Object>) second_level.get("attributes");
+					a[0]=1;
 					for (String key3 : third_level.keySet()) 
 					{
 						// fourth_level= (HashMap<String, Object>) third_level.get(key3);
@@ -81,34 +111,8 @@ public class Nodes {
 		    }
 			
 		
-			int counter = 0;
-			String ex = null;
-			IRI tosca_description = null;
-			IRI toscaDefault = null;
-			IRI toscaType = null;
-			IRI toscaProperty= null;
-			if(counter==0)
-			{
-				ex = "https://intelligence.csd.auth.gr/ontologies/tosca/";
-				tosca_description = Values.iri(ex,"description");
-				toscaDefault=Values.iri(ex,"toscaDefault");
-				toscaProperty = Values.iri(ex,"toscaProperty");
-				toscaType = Values.iri(ex,"toscaType");
-				
+			
 
-				counter++;
-			}
-
-			ModelBuilder builder = new ModelBuilder();
-			builder.setNamespace("ex", "https://intelligence.csd.auth.gr/ontologies/tosca/").subject("ex:" + node_name)
-			.add(RDF.TYPE, "owl:Class")
-			.add(RDFS.SUBCLASSOF, "https://intelligence.csd.auth.gr/ontologies/tosca/" + derived_from)
-	        .add(tosca_description,RDF.TYPE,"owl:AnnotationProperty")
-	        .add(tosca_description,RDFS.RANGE,"string")
-	        .add(toscaDefault,RDF.TYPE,"owl:AnnotationProperty")
-	        .add(toscaDefault,RDFS.RANGE,"string")
-	        .add(toscaProperty,RDF.TYPE,"owl:AnnotationProperty")
-	        .add(toscaProperty,RDFS.RANGE,"boolean");
 
 
 			//for properties
@@ -147,23 +151,35 @@ public class Nodes {
 							builder.add(properties,toscaDefault,Values.literal(fourth_level.get("default")));
 
 						}
+						if (fourth_level.get("entry_schema") != null) 
+						{
+							
+							IRI entry_schema = Values.iri(ex,"entry_schema");
+							builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
+						}
+				
 						if (fourth_level.get("required") != null) 
 						{											
 							if(fourth_level.get("required").equals(true))
 							{
-								builder.add(ex,RDFS.SUBCLASSOF,OWL.RESTRICTION);
-								builder.add(OWL.RESTRICTION, RDF.PROPERTY);
-								builder.add(RDF.PROPERTY, properties);
-								builder.add(properties,OWL.MINQUALIFIEDCARDINALITY, "0");
+								BNode r1 = Values.bnode();
+								builder.subject("ex:"+node_name);
+								builder.add(RDFS.SUBCLASSOF, r1);
+								builder.subject(r1);
+								builder.add(RDF.TYPE, OWL.RESTRICTION);
+								builder.add(OWL.ONPROPERTY, properties);
+								builder.add(OWL.MINCARDINALITY, 1);
 
 							}
 							else if(fourth_level.get("required").equals(false))
 							{
-								builder.add(node_name,RDFS.SUBCLASSOF);
-								builder.add(OWL.RESTRICTION, RDF.PROPERTY);
-								builder.add(RDF.PROPERTY, properties);
-								builder.add(properties,OWL.MINQUALIFIEDCARDINALITY, "1");
-
+								BNode r2 = Values.bnode();
+								builder.subject("ex:"+node_name);
+								builder.add(RDFS.SUBCLASSOF, r2);
+								builder.subject(r2);
+								builder.add(RDF.TYPE, OWL.RESTRICTION);
+								builder.add(OWL.ONPROPERTY, properties);
+								builder.add(OWL.MINCARDINALITY, 0);
 							}
 						}
 		     			
@@ -182,7 +198,6 @@ public class Nodes {
 				{
 					IRI attribute = Values.iri(ex,attribute_names.get(j));
 					builder.add(attribute,RDF.TYPE,"owl:DatatypeProperty");
-
 					if (third_level.get(attribute_names.get(j)) != null) 
 					{
 						fourth_level = (HashMap<String, Object>) third_level.get(attribute_names.get(j));
@@ -205,24 +220,45 @@ public class Nodes {
 						{
 							builder.add(attribute,tosca_description,Values.literal(fourth_level.get("description")));
 						}
-				
+						
+						if (fourth_level.get("entry_schema") != null) 
+						{
+							IRI entry_schema = Values.iri(ex,"entry_schema");
+							builder.add(RDF.TYPE,"owl:ObjectProperty");
+						}
+						if (fourth_level.get("constraints") != null) 
+						{
+							fifth_level=(HashMap<String, Object>) fourth_level.get("constraints");
+							for (Entry<String, Object> entry: fifth_level.entrySet()) 
+							{
+								String cons = entry.getKey();
+								Object val = entry.getValue();
+								//builder.add(fifth_level.get(cons),Values.literal((val));
+							}
+						}
 						builder.add(attribute,toscaProperty,"false");
 						if (fourth_level.get("required") != null) 
 						{											
 							if(fourth_level.get("required").equals(true))
 							{
-								builder.add(ex,RDFS.SUBCLASSOF);
-								builder.add(OWL.RESTRICTION, RDF.PROPERTY);
-								builder.add(RDF.PROPERTY, attribute);
-								builder.add(attribute,OWL.MINQUALIFIEDCARDINALITY, "0");
-
+								
+								BNode r3 = Values.bnode();
+								builder.subject("ex:"+node_name);
+								builder.add(RDFS.SUBCLASSOF, r3);
+								builder.subject(r3);
+								builder.add(RDF.TYPE, OWL.RESTRICTION);
+								builder.add(OWL.ONPROPERTY, attribute);
+								builder.add(OWL.MINCARDINALITY, 1);
 							}
 							else if(fourth_level.get("required").equals(false))
 							{
-								builder.add(ex,RDFS.SUBCLASSOF);
-								builder.add(OWL.RESTRICTION, RDF.PROPERTY);
-								builder.add(RDF.PROPERTY, attribute);
-								builder.add(attribute,OWL.MINQUALIFIEDCARDINALITY, "1");
+								BNode r4 = Values.bnode();
+								builder.subject("ex:"+node_name);
+								builder.add(RDFS.SUBCLASSOF, r4);
+								builder.subject(r4);
+								builder.add(RDF.TYPE, OWL.RESTRICTION);
+								builder.add(OWL.ONPROPERTY, attribute);
+								builder.add(OWL.MINCARDINALITY, 0);
 
 							}
 						}
@@ -239,50 +275,104 @@ public class Nodes {
 			c[0]=0;
 			third_level = (HashMap<String, Object>) second_level.get("capabilities");
 			IRI capabilities= Values.iri(ex,"capabilities");
+			
 			for (int j = 0; j < capabilities_names.size(); j++) 
 			{
 				IRI capability = Values.iri(ex,capabilities_names.get(j));
 				builder.add(capability,RDF.TYPE,"owl:ObjectProperty");
 				//System.out.println(fourth_level.get(third_level.get(capabilities_names.get(j))));
 				fourth_level = (HashMap<String, Object>) third_level.get(capabilities_names.get(j));
-				if (fourth_level.get("type") != null) 
+				
+	
+                int type=0;
+            	if (fourth_level.get("type") != null) 
 				{
-					builder.add(capability,RDFS.RANGE,fourth_level.get("type"));
+            		type=1;
+
 				}
+            	
+            	int valid=0;
+				
+				IRI valid_source_types=Values.iri(ex,"valid_source_types");
 				if (fourth_level.get("valid_source_types") != null) 
 				{
-					builder.add(capability,RDF.LIST,fourth_level.get("valid_source_types"));
-				}
-		 	 
-		 
-		     	if (fourth_level.get("required") != null) 
-				{											
-					if(fourth_level.get("required").equals(true))
-					{
-						builder.add(node_name,RDFS.SUBCLASSOF);
-						builder.add(OWL.RESTRICTION, RDF.PROPERTY);
-						builder.add(RDF.PROPERTY, capability);
-						builder.add(capability,OWL.MINQUALIFIEDCARDINALITY, "0");
+					builder.add(valid_source_types,RDF.TYPE,"owl:ObjectProperty");
+					builder.add(valid_source_types,RDF.LIST);
+					valid=1;
 
-					}
-					else if(fourth_level.get("required").equals(false))
-					{
-						builder.add(node_name,RDFS.SUBCLASSOF);
-						builder.add(OWL.RESTRICTION, RDF.PROPERTY);
-						builder.add(RDF.PROPERTY, capability);
-						builder.add(capability,OWL.MINQUALIFIEDCARDINALITY, "0");
-
-					}
 				}
-		     	builder.add(RDFS.SUBCLASSOF, OWL.RESTRICTION);
-				builder.add(RDF.PROPERTY, capabilities);
-				builder.add(capabilities,OWL.SOMEVALUESFROM,capability);
-		     	builder.add(capability,OWL.SOMEVALUESFROM,fourth_level.get("type"));
+		     	
+				//start
+				BNode r5 = Values.bnode();
+				builder.subject("ex:"+node_name);
+				builder.add(RDFS.SUBCLASSOF, r5);
+				builder.subject(r5);
+				builder.add(RDF.TYPE, OWL.RESTRICTION);
+				builder.add(OWL.ONPROPERTY, capabilities);
+				
+				BNode r6 = Values.bnode();
+				BNode r7 = Values.bnode();
+				
+
+				builder.subject(r6);
+				builder.add(RDF.TYPE, OWL.RESTRICTION);
+				builder.add(capabilities,OWL.SOMEVALUESFROM,r7); //level capapability  some r7, r7 can be simple node or intersection
+				
+				
+				if(type!=0)
+				{
+				  if(valid==0) // if there is only host type
+				  {
+					builder.subject(r7);
+					builder.add(RDF.TYPE, OWL.RESTRICTION);
+					builder.add(OWL.ONPROPERTY, capability);
+					Object type_host=fourth_level.get("type");
+					builder.add(capability,OWL.SOMEVALUESFROM,type_host);
+				  }
+				  else 	 //if there is valid source types 
+
+				  {
+					  //capabilities some ( host some tosca.capabilities.Node and host some 
+					  //(valid_source_types some [sodalite.nodes.DockerizedComponent])(
+					  
+					  
+					  BNode r8 = Values.bnode(); // for host some tosca
+					  BNode r9 = Values.bnode(); // for host some valid source types ..
+					  BNode r10 = Values.bnode(); // for valid source types some..
+
+					  builder.subject(r7);
+					  builder.add(r7,OWL.INTERSECTIONOF,r8);
+
+					  builder.subject(r8);
+					  builder.add(RDF.TYPE, OWL.RESTRICTION);
+				      builder.add(OWL.ONPROPERTY, capability);
+					  Object type_host=fourth_level.get("type");
+					  builder.add(capability,OWL.SOMEVALUESFROM,type_host);
+					  
+					  builder.subject(r9);
+					  builder.add(RDF.TYPE, OWL.RESTRICTION);
+				      builder.add(OWL.ONPROPERTY, capability);
+				      builder.add(capability,OWL.SOMEVALUESFROM,r10);
+				      
+				      builder.subject(r10)
+					         .add(RDF.TYPE, OWL.RESTRICTION)
+				             .add(OWL.ONPROPERTY, valid_source_types);
+					  Object valid_host=fourth_level.get("valid_source_types");
+				      System.out.println(valid_host);
+					  builder.add(valid_source_types,OWL.SOMEVALUESFROM,valid_host);
+					  
+
+
+				  }
+				}
+				
 			}
 		}
 
 		Model m = builder.build();
-		m.forEach(System.out::println);
+		Rio.write(m, System.out, RDFFormat.TURTLE);
+		//m.forEach(System.out::println);
+
 		}
 	}
 }

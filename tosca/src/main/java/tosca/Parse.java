@@ -36,6 +36,11 @@ public class Parse {
  			  Nodes node_t = new Nodes();
  			  node_t.nodeTypes();
  		    }
+ 			if(x.equals("data_types"))
+ 			{
+ 			  Data data_t = new Data();
+ 			  data_t.dataTypes();
+ 		    }
  			
  		}
 	  }

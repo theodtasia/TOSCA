@@ -19,23 +19,9 @@ data_types:
     required: true 
     type: string
 
-node_types:
+node_types:   
  sodalite.nodes.DockerHost:  
   derived_from: tosca.nodes.SoftwareComponent
-  attributes:
-    public_address:
-     description: "Host's IP"
-     type: string
-    public_addresses:
-     description: "AHost's IP"
-     type: string
-  properties:
-    Address:
-     description: "Host's Snd IP"
-     type: map
-    public_addresses2:
-     description: "AHost's snd IP"
-     type: string    
   capabilities:  
     host:  
      type: tosca.capabilities.Node
