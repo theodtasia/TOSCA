@@ -2,12 +2,14 @@ package tosca;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
+import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -22,6 +24,7 @@ public class Nodes
 	@SuppressWarnings("unchecked")
 	void nodeTypes() 
 	{
+
 		String node_name = null;
 		Object derived_from = null;
 		HashMap<String, Object> map2 = new HashMap<>();
@@ -124,7 +127,6 @@ public class Nodes
 				for (int j = 0; j < properties_names.size(); j++) 
 				{
 					IRI properties = Values.iri(ex,properties_names.get(j));
-					builder.add(properties,RDF.TYPE,"owl:DatatypeProperty");
 					if (third_level.get(properties_names.get(j)) != null) 
 					{
 						fourth_level = (HashMap<String, Object>) third_level.get(properties_names.get(j));
@@ -133,12 +135,19 @@ public class Nodes
 						// check if the type is "normal" datatype or toscaType
 						if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
 						{
-
+							builder.add(properties,RDF.TYPE,"owl:DatatypeProperty");
 							builder.add(properties,RDFS.RANGE,fourth_level.get("type"));
 						
 						}
+						else if(((String) fourth_level.get("type")).startsWith("tosca"))
+						{
+							builder.add(properties,RDF.TYPE,"owl:ObjectProperty");
+							builder.add(properties,RDFS.RANGE,fourth_level.get("type"));
+
+						}
 						else
 						{
+							builder.add(properties,RDF.TYPE,"owl:DatatypeProperty");
 							builder.add(properties,toscaType,fourth_level.get("type"));
 
 						}
@@ -205,12 +214,19 @@ public class Nodes
 						{
 							if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
 							{
-
+								builder.add(attribute,RDF.TYPE,"owl:DatatypeProperty");
 								builder.add(attribute,RDFS.RANGE,fourth_level.get("type"));
 			
 							}
+							else if(((String) fourth_level.get("type")).startsWith("tosca"))
+							{
+								builder.add(attribute,RDF.TYPE,"owl:ObjectProperty");
+								builder.add(attribute,RDFS.RANGE,fourth_level.get("type"));
+
+							}
 							else
 							{
+								builder.add(attribute,RDF.TYPE,"owl:DatatypeProperty");
 								builder.add(attribute,toscaType,fourth_level.get("type"));
 
 
@@ -304,26 +320,21 @@ public class Nodes
 		     	
 				//start
 				BNode r5 = Values.bnode();
+				BNode r6 = Values.bnode();
 				builder.subject("ex:"+node_name);
 				builder.add(RDFS.SUBCLASSOF, r5);
 				builder.subject(r5);
 				builder.add(RDF.TYPE, OWL.RESTRICTION);
 				builder.add(OWL.ONPROPERTY, capabilities);
-				
-				BNode r6 = Values.bnode();
-				BNode r7 = Values.bnode();
-				
-
-				builder.subject(r6);
-				builder.add(RDF.TYPE, OWL.RESTRICTION);
-				builder.add(capabilities,OWL.SOMEVALUESFROM,r7); //level capapability  some r7, r7 can be simple node or intersection
+				builder.add(capabilities,OWL.SOMEVALUESFROM,r6); 
+	
 				
 				
 				if(type!=0)
 				{
 				  if(valid==0) // if there is only host type
 				  {
-					builder.subject(r7);
+					builder.subject(r6);
 					builder.add(RDF.TYPE, OWL.RESTRICTION);
 					builder.add(OWL.ONPROPERTY, capability);
 					Object type_host=fourth_level.get("type");
@@ -336,31 +347,37 @@ public class Nodes
 					  //(valid_source_types some [sodalite.nodes.DockerizedComponent])(
 					  
 					  
-					  BNode r8 = Values.bnode(); // for host some tosca
-					  BNode r9 = Values.bnode(); // for host some valid source types ..
-					  BNode r10 = Values.bnode(); // for valid source types some..
+					  BNode r7 = Values.bnode(); // for host some tosca
+					  BNode r8 = Values.bnode(); // for host some valid source types ..
+					  BNode r9 = Values.bnode(); // for valid source types some..
 
-					  builder.subject(r7);
-					  builder.add(r7,OWL.INTERSECTIONOF,r8);
-
-					  builder.subject(r8);
+					  
+                	  builder.subject(r7);
 					  builder.add(RDF.TYPE, OWL.RESTRICTION);
 				      builder.add(OWL.ONPROPERTY, capability);
 					  Object type_host=fourth_level.get("type");
 					  builder.add(capability,OWL.SOMEVALUESFROM,type_host);
 					  
-					  builder.subject(r9);
+					  builder.subject(r8);
 					  builder.add(RDF.TYPE, OWL.RESTRICTION);
 				      builder.add(OWL.ONPROPERTY, capability);
-				      builder.add(capability,OWL.SOMEVALUESFROM,r10);
+				      builder.add(capability,OWL.SOMEVALUESFROM,r9);
 				      
-				      builder.subject(r10)
+				      builder.subject(r9)
 					         .add(RDF.TYPE, OWL.RESTRICTION)
 				             .add(OWL.ONPROPERTY, valid_source_types);
 					  Object valid_host=fourth_level.get("valid_source_types");
-				      System.out.println(valid_host);
 					  builder.add(valid_source_types,OWL.SOMEVALUESFROM,valid_host);
 					  
+					  List<BNode> intersectionList = new ArrayList<BNode>();
+					  intersectionList.add(r7);
+					  intersectionList.add(r8);
+					  
+					  BNode head = Values.bnode();
+
+					  RDFCollections.asRDF(intersectionList, head, builder.build());
+
+ 					 builder.subject(r6).add(RDF.TYPE, OWL.CLASS).add(OWL.INTERSECTIONOF, head);
 
 				  }
 				}
@@ -369,8 +386,11 @@ public class Nodes
 		}
 		Model m = builder.build();
 		Rio.write(m, System.out, RDFFormat.TURTLE);
-		//m.forEach(System.out::println);
+
+		
+
 
 		}
+
 	}
 }

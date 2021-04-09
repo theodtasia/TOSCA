@@ -11,18 +11,10 @@ data_types:
    port_range_min:  
     required: true 
     type: tosca.datatypes.network.PortDef 
-    port_range_max:  
+   port_range_max:  
     type: tosca.datatypes.network.PortDef 
     required: true 
    remote_ip_prefix:  
     default: "0.0.0.0/0" 
-    required: true 
-
-node_types:   
- sodalite.nodes.DockerHost:  
-  derived_from: tosca.nodes.SoftwareComponent
-  capabilities:  
-    ax:  
-     type: tosca.capabilities.Node
-     valid_source_types: [sodalite.nodes.DockerizedComponent]
-     
+    required: true
+    type: string 
