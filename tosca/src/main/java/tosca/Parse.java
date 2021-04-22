@@ -1,21 +1,33 @@
 package tosca;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
 import java.io.FileInputStream;
+
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.repository.Repository;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.Rio;
+
+
+
 
 public class Parse {
 	
 	private static HashMap<String, HashMap<String, Object>> map;
-	
+	public static Model m;
 	
 	
 	public static void main(String[] args) throws IOException
 
-	  {
-		Parse p = new Parse();
+   {
+
+	Parse p = new Parse();
 		//p.loadyaml();
 		 InputStream inputStream = new FileInputStream("example.yml");
 		    Yaml yaml = new Yaml();
@@ -29,7 +41,8 @@ public class Parse {
  		    list.add(key);
  		}
  		
- 		for(String x : list){
+ 		for(String x : list)
+ 		{
 
  			if(x.equals("node_types"))
  			{
@@ -41,9 +54,15 @@ public class Parse {
  			  Data data_t = new Data();
  			  data_t.dataTypes();
  		    }
+ 			if(x.equals("node_templates"))
+ 			{
+ 			  Templates templates = new Templates();
+ 			  templates.nodeTemplates();
+ 		    }
  			
  		}
-	  }
+ 		}
+	  
 	
 	public void setMap(HashMap<String, HashMap<String, Object>> map) {
 		this.map = map;

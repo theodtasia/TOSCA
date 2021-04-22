@@ -20,6 +20,7 @@ import org.eclipse.rdf4j.rio.Rio;
 public class Data 
 {
 	Parse map = new Parse();
+	@SuppressWarnings("unchecked")
 	void dataTypes() 
 	{
 		String node_name = null;
@@ -163,6 +164,37 @@ public class Data
 							IRI entry_schema = Values.iri(ex,"entry_schema");
 							builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
 						}
+						if (fourth_level.get("constraints") != null) 
+						{
+							IRI constraints = Values.iri(ex,"constraints");
+							builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
+							fifth_level=(HashMap<String, Object>) fourth_level.get("constraints");
+							for (Entry<String, Object> entry: fifth_level.entrySet()) 
+							{
+								String cons = entry.getKey();
+								IRI constr = Values.iri(ex,cons);
+								Object val = entry.getValue();
+								builder.subject(constraints);
+								if(cons.equals("valid_values"))
+								{
+									builder.add(constr,RDF.LIST);
+									builder.add(constr, val);
+								}
+								if(cons.equals("min_length"))
+								{
+									builder.add(constr,RDFS.RANGE,"string");
+									builder.add(constr, val);
+									
+								}
+								if(cons.equals("max_length"))
+								{
+									builder.add(constr,RDFS.RANGE,"string");
+									builder.add(constr, val);
+									
+								}
+							}
+							
+						}
 				
 						if (fourth_level.get("required") != null) 
 						{											
@@ -201,11 +233,13 @@ public class Data
 				a[0]=0;
 				third_level = (HashMap<String, Object>) second_level.get("attributes");
 				for (int j = 0; j < attribute_names.size(); j++) 
-				{
+				{  						
+
 					IRI attribute = Values.iri(ex,attribute_names.get(j));
 					builder.add(attribute,RDF.TYPE,"owl:DatatypeProperty");
 					if (third_level.get(attribute_names.get(j)) != null) 
 					{
+						builder.add(attribute,toscaProperty,"false");
 						fourth_level = (HashMap<String, Object>) third_level.get(attribute_names.get(j));
 						if (fourth_level.get("type") != null) 
 						{
@@ -232,17 +266,7 @@ public class Data
 							IRI entry_schema = Values.iri(ex,"entry_schema");
 							builder.add(RDF.TYPE,"owl:ObjectProperty");
 						}
-						if (fourth_level.get("constraints") != null) 
-						{
-							fifth_level=(HashMap<String, Object>) fourth_level.get("constraints");
-							for (Entry<String, Object> entry: fifth_level.entrySet()) 
-							{
-								String cons = entry.getKey();
-								Object val = entry.getValue();
-								//builder.add(fifth_level.get(cons),Values.literal((val));
-							}
-						}
-						builder.add(attribute,toscaProperty,"false");
+						
 						if (fourth_level.get("required") != null) 
 						{											
 							if(fourth_level.get("required").equals(true))
@@ -266,6 +290,36 @@ public class Data
 								builder.add(OWL.ONPROPERTY, attribute);
 								builder.add(OWL.MINCARDINALITY, 0);
 
+							}
+						}
+						
+						if (fourth_level.get("constraints") != null) 
+						{
+							IRI constraints = Values.iri(ex,"constraints");
+							builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
+							for (Entry<String, Object> entry: fifth_level.entrySet()) 
+							{
+								String cons = entry.getKey();
+								IRI constr = Values.iri(ex,cons);
+								Object val = entry.getValue();
+								builder.subject(constraints);
+								if(cons.equals("valid_values"))
+								{
+									builder.add(constr,RDF.LIST);
+									builder.add(constr, val);
+								}
+								if(cons.equals("min_length"))
+								{
+									builder.add(constr,RDFS.RANGE,"string");
+									builder.add(constr, val);
+								
+								}
+								if(cons.equals("max_length"))
+								{
+									builder.add(constr,RDFS.RANGE,"string");
+									builder.add(constr, val);
+								
+								}
 							}
 						}
 				
@@ -374,11 +428,7 @@ public class Data
 				
 			}
 		}
-		Model m = builder.build();
-		Rio.write(m, System.out, RDFFormat.TURTLE);
-
-		
-
+		Parse.m = builder.build();
 
 		}
 

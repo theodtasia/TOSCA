@@ -191,6 +191,36 @@ public class Nodes
 								builder.add(OWL.MINCARDINALITY, 0);
 							}
 						}
+						if (fourth_level.get("constraints") != null) 
+						{
+							IRI constraints = Values.iri(ex,"constraints");
+							builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
+							for (Entry<String, Object> entry: fifth_level.entrySet()) 
+							{
+								String cons = entry.getKey();
+								IRI constr = Values.iri(ex,cons);
+								Object val = entry.getValue();
+								builder.subject(constraints);
+								if(cons.equals("valid_values"))
+								{
+									builder.add(constr,RDF.LIST);
+									builder.add(constr, val);
+								}
+								if(cons.equals("min_length"))
+								{
+									builder.add(constr,RDFS.RANGE,"string");
+									builder.add(constr, val);
+								
+								}
+								if(cons.equals("max_length"))
+								{
+									builder.add(constr,RDFS.RANGE,"string");
+									builder.add(constr, val);
+								
+								}
+							}
+						}
+
 		     			
 						builder.add(properties,toscaProperty,"true");
 					}
@@ -278,6 +308,36 @@ public class Nodes
 
 							}
 						}
+						if (fourth_level.get("constraints") != null) 
+						{
+							IRI constraints = Values.iri(ex,"constraints");
+							builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
+							for (Entry<String, Object> entry: fifth_level.entrySet()) 
+							{
+								String cons = entry.getKey();
+								IRI constr = Values.iri(ex,cons);
+								Object val = entry.getValue();
+								builder.subject(constraints);
+								if(cons.equals("valid_values"))
+								{
+									builder.add(constr,RDF.LIST);
+									builder.add(constr, val);
+								}
+								if(cons.equals("min_length"))
+								{
+									builder.add(constr,RDFS.RANGE,"string");
+									builder.add(constr, val);
+								
+								}
+								if(cons.equals("max_length"))
+								{
+									builder.add(constr,RDFS.RANGE,"string");
+									builder.add(constr, val);
+								
+								}
+							}
+						}
+
 				
 				}
 		
@@ -384,9 +444,7 @@ public class Nodes
 				
 			}
 		}
-		Model m = builder.build();
-		Rio.write(m, System.out, RDFFormat.TURTLE);
-
+		Parse.m = builder.build();
 		
 
 
