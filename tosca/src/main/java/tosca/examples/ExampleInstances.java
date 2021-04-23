@@ -40,8 +40,8 @@ public class ExampleInstances {
 		builder.setNamespace("tosca", "https://intelligence.csd.auth.gr/ontologies/tosca/").setNamespace("ex", "http://examples/")
 		.subject("ex:snow-vm").add(RDF.TYPE, "ex:sodalite.nodes.OpenStack.VM")
 		
-		.add("tosca:properties", r1) // this is for properties. If we have "attributes" we use tosca:attribute
-		.subject(r1).add("ex:key-name", "ssh-key-name").add("ex:image", "image-name") // more properties
+		
+		.add("ex:key-name", "ssh-key-name").add("ex:image", "image-name") // more properties
 		
 		.subject("ex:snow-vm").add("tosca:requirements", r2)
 		.subject(r2).add("tosca:protected_by", r3)
