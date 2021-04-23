@@ -1,4 +1,4 @@
-package tosca;
+package tosca.examples;
 
 import java.util.ArrayList;
 import java.util.List;
