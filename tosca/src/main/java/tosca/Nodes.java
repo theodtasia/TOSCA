@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
 import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
@@ -46,6 +45,7 @@ public class Nodes
 			IRI tosca_description = null;
 			IRI toscaDefault = null;
 			IRI toscaType = null;
+			IRI requirements = null;
 			IRI toscaProperty= null;
 			ModelBuilder builder = new ModelBuilder();
 			builder.setNamespace("ex", "https://intelligence.csd.auth.gr/ontologies/tosca/").subject("ex:" + node_name)
@@ -54,9 +54,10 @@ public class Nodes
 			tosca_description = Values.iri(ex,"tosca_description");
 			toscaDefault=Values.iri(ex,"toscaDefault");
 			toscaProperty = Values.iri(ex,"toscaProperty");
-			toscaType = Values.iri(ex, "toscaType");	
+			toscaType = Values.iri(ex, "toscaType");
+			requirements = Values.iri(ex, "requirements");	
 			builder.subject(ex + node_name)
-			
+			.add(requirements,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
 			.add(tosca_description,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
 			.add(tosca_description,RDFS.RANGE,"string")
 			.add(toscaDefault,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
@@ -274,13 +275,33 @@ public class Nodes
 						}
 						if (fourth_level.get("constraints") != null) 
 						{
-							fifth_level=(HashMap<String, Object>) fourth_level.get("constraints");
-							for (Entry<String, Object> entry: fifth_level.entrySet()) 
-							{
-								String cons = entry.getKey();
-								Object val = entry.getValue();
-								//builder.add(fifth_level.get(cons),Values.literal((val));
-							}
+							
+								IRI constraints = Values.iri(ex,"constraints");
+								builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
+								for (Entry<String, Object> entry: fifth_level.entrySet()) 
+								{
+									String cons = entry.getKey();
+									IRI constr = Values.iri(ex,cons);
+									Object val = entry.getValue();
+									builder.subject(constraints);
+									if(cons.equals("valid_values"))
+									{
+										builder.add(constr,RDF.LIST);
+										builder.add(constr, val);
+									}
+									if(cons.equals("min_length"))
+									{
+										builder.add(constr,RDFS.RANGE,"string");
+										builder.add(constr, val);
+									
+									}
+									if(cons.equals("max_length"))
+									{
+										builder.add(constr,RDFS.RANGE,"string");
+										builder.add(constr, val);
+									
+									}
+								}
 						}
 						builder.add(attribute,toscaProperty,"false");
 						if (fourth_level.get("required") != null) 
@@ -445,7 +466,8 @@ public class Nodes
 			}
 		}
 		Parse.m = builder.build();
-		
+		Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
+
 
 
 		}

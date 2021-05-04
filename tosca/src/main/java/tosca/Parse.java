@@ -1,16 +1,13 @@
 package tosca;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
 import java.io.FileInputStream;
 
 import org.eclipse.rdf4j.model.Model;
-import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 
@@ -61,6 +58,8 @@ public class Parse {
  		    }
  			
  		}
+		Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
+
  		}
 	  
 	

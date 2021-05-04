@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
 import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
@@ -23,7 +22,7 @@ public class Data
 	@SuppressWarnings("unchecked")
 	void dataTypes() 
 	{
-		String node_name = null;
+		String data_name = null;
 		Object derived_from = null;
 		HashMap<String, Object> map2 = new HashMap<>();
 		ArrayList<String> attribute_names = new ArrayList<>();
@@ -40,20 +39,20 @@ public class Data
     	final int p[]= {0};
 		for (String key : map2.keySet()) 
 		{
-			node_name = key;
+			data_name = key;
 			IRI tosca_description = null;
 			IRI toscaDefault = null;
 			IRI toscaType = null;
 			IRI toscaProperty= null;
 			ModelBuilder builder = new ModelBuilder();
-			builder.setNamespace("ex", "https://intelligence.csd.auth.gr/ontologies/tosca/").subject("ex:" + node_name)
+			builder.setNamespace("ex", "https://intelligence.csd.auth.gr/ontologies/tosca/").subject("ex:" + data_name)
 			.add(RDF.TYPE, OWL.CLASS);
 			
 			tosca_description = Values.iri(ex,"tosca_description");
 			toscaDefault=Values.iri(ex,"toscaDefault");
 			toscaProperty = Values.iri(ex,"toscaProperty");
 			toscaType = Values.iri(ex, "toscaType");	
-			builder.subject(ex + node_name)
+			builder.subject(ex + data_name)
 			
 			.add(tosca_description,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
 			.add(tosca_description,RDFS.RANGE,"string")
@@ -64,7 +63,7 @@ public class Data
 			
 			
 			//System.out.println(key);
-			second_level = ((HashMap<String, Object>) map2.get(node_name));
+			second_level = ((HashMap<String, Object>) map2.get(data_name));
 			for (String key2 : second_level.keySet()) 
 			{	
 				
@@ -121,7 +120,6 @@ public class Data
 			{
 				p[0]=0;
 				third_level = (HashMap<String, Object>) second_level.get("properties");
-
 				for (int j = 0; j < properties_names.size(); j++) 
 				{
 					IRI properties = Values.iri(ex,properties_names.get(j));
@@ -201,7 +199,7 @@ public class Data
 							if(fourth_level.get("required").equals(true))
 							{
 								BNode r1 = Values.bnode();
-								builder.subject("ex:"+node_name);
+								builder.subject("ex:"+data_name);
 								builder.add(RDFS.SUBCLASSOF, r1);
 								builder.subject(r1);
 								builder.add(RDF.TYPE, OWL.RESTRICTION);
@@ -212,7 +210,7 @@ public class Data
 							else if(fourth_level.get("required").equals(false))
 							{
 								BNode r2 = Values.bnode();
-								builder.subject("ex:"+node_name);
+								builder.subject("ex:"+data_name);
 								builder.add(RDFS.SUBCLASSOF, r2);
 								builder.subject(r2);
 								builder.add(RDF.TYPE, OWL.RESTRICTION);
@@ -273,7 +271,7 @@ public class Data
 							{
 								
 								BNode r3 = Values.bnode();
-								builder.subject("ex:"+node_name);
+								builder.subject("ex:"+data_name);
 								builder.add(RDFS.SUBCLASSOF, r3);
 								builder.subject(r3);
 								builder.add(RDF.TYPE, OWL.RESTRICTION);
@@ -283,7 +281,7 @@ public class Data
 							else if(fourth_level.get("required").equals(false))
 							{
 								BNode r4 = Values.bnode();
-								builder.subject("ex:"+node_name);
+								builder.subject("ex:"+data_name);
 								builder.add(RDFS.SUBCLASSOF, r4);
 								builder.subject(r4);
 								builder.add(RDF.TYPE, OWL.RESTRICTION);
@@ -365,7 +363,7 @@ public class Data
 				//start
 				BNode r5 = Values.bnode();
 				BNode r6 = Values.bnode();
-				builder.subject("ex:"+node_name);
+				builder.subject("ex:"+data_name);
 				builder.add(RDFS.SUBCLASSOF, r5);
 				builder.subject(r5);
 				builder.add(RDF.TYPE, OWL.RESTRICTION);
@@ -429,6 +427,8 @@ public class Data
 			}
 		}
 		Parse.m = builder.build();
+		Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
+
 
 		}
 

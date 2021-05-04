@@ -3,34 +3,157 @@ package tosca;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Optional;
-
 import org.eclipse.rdf4j.model.BNode;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.Model;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
-import org.eclipse.rdf4j.model.util.Models;
 import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
-import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.Rio;
 
 public class Templates
 {
 	Parse map = new Parse();
 	@SuppressWarnings("unchecked")
 	void nodeTemplates() 
-	{		
-		Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
-		ValueFactory factory = SimpleValueFactory.getInstance(); 
+	{	
+		String template_name = null;
+		String type=null;
+		HashMap<String, Object> map2 = new HashMap<>();
+		HashMap<String, Object> second_level = map2;
+		HashMap<String, Object> third_level = map2;
+		HashMap<String, Object> fourth_level = map2;
+		HashMap<String, Object> fifth_level = map2;
+
+		ArrayList<String> attribute_names = new ArrayList<>();
+		ArrayList<String> properties_names = new ArrayList<>();
+		ArrayList<String> requirements_names = new ArrayList<>();;
+		final int r[]= {0};
+    	final int a[]= {0};
+    	final int p[]= {0};
+		
+		map2 = map.getMap().get("node_templates");
+		ModelBuilder builder = new ModelBuilder();
+		builder.setNamespace("tosca", "https://intelligence.csd.auth.gr/ontologies/tosca/").setNamespace("ex", "http://examples/");
+		for (String key : map2.keySet()) 
+		{
+			template_name = key;
+			builder.subject("ex:"+template_name);
+			second_level = ((HashMap<String, Object>) map2.get(template_name));
+			for (String key2 : second_level.keySet()) 
+			{	
+					if (key2.equals("type")) 
+					{
+						type = (String) second_level.get("type"); 
+						builder.add(RDF.TYPE, "ex:"+type);
+					}
+					else if (key2.equals("properties"))
+					{
+						third_level = (HashMap<String, Object>) second_level.get("properties");	
+						p[0]=1;
+						for (String key3 : third_level.keySet()) 
+						{
+							properties_names.add(key3);
+					    }
+					
+					}
+					else if (key2.equals("attributes")) 
+					{
+						third_level = (HashMap<String, Object>) second_level.get("attributes");
+						a[0]=1;
+						for (String key3 : third_level.keySet()) 
+						{
+							// fourth_level= (HashMap<String, Object>) third_level.get(key3);
+							attribute_names.add(key3);
+
+							// System.out.println("F" + fourth_level);
+
+					    }
+					} 
+					else if (key2.equals("requirements")) 
+					{
+						r[0]=1;	
+						third_level = (HashMap<String, Object>) second_level.get("requirements");
+						for (String key3 : third_level.keySet()) 
+						{
+							requirements_names.add(key3);
+					    }
+					}
+		    }
+			List<BNode> vars = new ArrayList<>();
+			//for properties
+			if(p[0]!=0)
+			{
+				p[0]=0;
+				third_level = (HashMap<String, Object>) second_level.get("properties");
+				for (int j = 0; j < properties_names.size(); j++) 
+				{
+					String key1 = properties_names.get(j);
+					String value = third_level.get(properties_names.get(j)).toString();
+					
+					if(value.contains("{")) //if property has more levels
+					{  
+						int v=0;
+						BNode head = Values.bnode();
+						builder.add("ex:"+key1, head)
+						.subject(head);
+						fourth_level = (HashMap<String, Object>) third_level.get(key1);
+						List<BNode> levelList = new ArrayList<BNode>();
+						for (Object key4 : fourth_level.keySet())  
+						{
+							vars.add(Values.bnode());
+							levelList.add(vars.get(v));
+							fifth_level=(HashMap<String, Object>)fourth_level.get(key4);
+							builder.subject(vars.get(v));
+							for (String key5 : fifth_level.keySet()) 
+							{
+								builder.add("ex:"+key5, fifth_level.get(key5));
+							}
+							v++;
+
+						}
+						
+
+					    RDFCollections.asRDF(levelList, head, builder.build());
+
+
+					
+					 }
+					 else
+					 {
+						builder.subject("ex:"+template_name);
+						builder.add("ex:"+key, value);
+					 }
+					
+					
+				}
+
+			}
+			if(r[0]!=0)
+			{
+				r[0]=0;
+				BNode r2 = Values.bnode();
+				BNode r3 = Values.bnode();
+				third_level = (HashMap<String, Object>) second_level.get("requirements");
+				for (int j = 0; j < requirements_names.size(); j++) 
+				{
+					builder.subject("ex:"+template_name)
+					.add("tosca:requirements", r2);
+					Object key1 = requirements_names.get(j);
+					builder.subject(r2).add("tosca:"+key1, r3);
+					fifth_level=(HashMap<String, Object>) third_level.get(key1);
+					for (String key5 : fifth_level.keySet()) 
+					{
+						builder.add("tosca:"+key5, fifth_level.get(key5));
+					}
+					
+				}
+			}
+		}
+		
+		
+
+		Parse.m = builder.build();
+
 
 	}
+	
 }	
