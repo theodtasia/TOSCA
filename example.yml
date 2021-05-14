@@ -1,24 +1,3 @@
-data_types:
- sodalite.datatypes.OpenStack.SecurityRule:  
-  derived_from: tosca.datatypes.Root 
-  properties:  
-   protocol:  
-    required: true 
-    type: string 
-    default: "tcp" 
-    constraints:  
-     valid_values: ['tcp', 'udp', 'icmp'] 
-   port_range_min:  
-    required: true 
-    type: tosca.datatypes.network.PortDef 
-    port_range_max:  
-    type: tosca.datatypes.network.PortDef 
-    required: true 
-   remote_ip_prefix:  
-    default: "0.0.0.0/0" 
-    required: true 
-    type: string
-
 node_types:
  sodalite.nodes.DockerHost:  
   derived_from: tosca.nodes.SoftwareComponent
