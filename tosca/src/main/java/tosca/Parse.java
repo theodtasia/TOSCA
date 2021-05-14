@@ -27,7 +27,7 @@ public class Parse
 
 	Parse p = new Parse();
 		//p.loadyaml();
-		 InputStream inputStream = new FileInputStream("example2.yml");
+		 InputStream inputStream = new FileInputStream("example.yml");
 		    Yaml yaml = new Yaml();
 		    HashMap<String, HashMap<String,Object>> data = new HashMap<>();
 		    data = yaml.load(inputStream);
