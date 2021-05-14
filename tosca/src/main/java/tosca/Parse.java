@@ -14,7 +14,8 @@ import org.eclipse.rdf4j.rio.Rio;
 
 
 
-public class Parse {
+public class Parse 
+{
 	
 	private static HashMap<String, HashMap<String, Object>> map;
 	public static Model m;
@@ -26,7 +27,7 @@ public class Parse {
 
 	Parse p = new Parse();
 		//p.loadyaml();
-		 InputStream inputStream = new FileInputStream("example.yml");
+		 InputStream inputStream = new FileInputStream("example2.yml");
 		    Yaml yaml = new Yaml();
 		    HashMap<String, HashMap<String,Object>> data = new HashMap<>();
 		    data = yaml.load(inputStream);
