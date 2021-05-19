@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.eclipse.rdf4j.model.BNode;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
 import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
@@ -29,14 +30,15 @@ public class NodeTemplates
 		final int r[]= {0};
     	final int a[]= {0};
     	final int p[]= {0};
-		
 		map2 = map.getMap().get("node_templates");
 		ModelBuilder builder = new ModelBuilder();
+		String tosca = "https://intelligence.csd.auth.gr/ontologies/tosca/";
 		builder.setNamespace("tosca", "https://intelligence.csd.auth.gr/ontologies/tosca/").setNamespace("ex", "http://examples/");
 		for (String key : map2.keySet()) 
 		{
 			template_name = key;
 			builder.subject("ex:"+template_name);
+			IRI tosca_description = Values.iri(tosca,"tosca_description");
 			second_level = ((HashMap<String, Object>) map2.get(template_name));
 			for (String key2 : second_level.keySet()) 
 			{	
@@ -44,6 +46,10 @@ public class NodeTemplates
 					{
 						type = (String) second_level.get("type"); 
 						builder.add(RDF.TYPE, "ex:"+type);
+					}
+					else if(key2.equals("description")) 
+					{
+						builder.add(template_name,tosca_description,Values.literal(fourth_level.get("description")));
 					}
 					else if (key2.equals("properties"))
 					{

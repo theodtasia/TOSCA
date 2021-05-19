@@ -82,6 +82,10 @@ public class DataType
 				    }
 				
 				}
+				else if(key2.equals("description")) 
+				{
+					builder.add(data_name,tosca_description,Values.literal(fourth_level.get("description")));
+				}
 				
 
 		    }
