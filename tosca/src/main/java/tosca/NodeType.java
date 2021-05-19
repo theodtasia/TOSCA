@@ -15,7 +15,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
-public class Nodes 
+public class NodeType 
 {
 
 	Parse map = new Parse();
@@ -111,6 +111,10 @@ public class Nodes
 						capabilities_names.add(key3);
 				    }
 				}
+				else if(key2.equals("description")) 
+				{
+					builder.add(node_name,tosca_description,Values.literal(fourth_level.get("description")));
+				}
 
 		    }
 			
@@ -152,14 +156,14 @@ public class Nodes
 							builder.add(properties,toscaType,fourth_level.get("type"));
 
 						}
-						if (fourth_level.get("description") != null) 
-						{
-							builder.add(properties,tosca_description,Values.literal(fourth_level.get("description")));
-						}
 						if (fourth_level.get("default") != null) 
 						{
 							builder.add(properties,toscaDefault,Values.literal(fourth_level.get("default")));
 
+						}
+						if (fourth_level.get("description") != null) 
+						{
+							builder.add(properties,tosca_description,Values.literal(fourth_level.get("description")));
 						}
 						if (fourth_level.get("entry_schema") != null) 
 						{

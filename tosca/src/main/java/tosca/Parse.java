@@ -44,17 +44,17 @@ public class Parse
 
  			if(x.equals("node_types"))
  			{
- 			  Nodes node_t = new Nodes();
+ 			  NodeType node_t = new NodeType();
  			  node_t.nodeTypes();
  		    }
  			if(x.equals("data_types"))
  			{
- 			  Data data_t = new Data();
+ 			  DataType data_t = new DataType();
  			  data_t.dataTypes();
  		    }
  			if(x.equals("node_templates"))
  			{
- 			  Templates templates = new Templates();
+ 			  NodeTemplates templates = new NodeTemplates();
  			  templates.nodeTemplates();
  		    }
  			

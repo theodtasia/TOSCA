@@ -16,7 +16,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 
-public class Data 
+public class DataType 
 {
 	Parse map = new Parse();
 	@SuppressWarnings("unchecked")

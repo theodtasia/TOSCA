@@ -9,7 +9,7 @@ import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 
-public class Templates
+public class NodeTemplates
 {
 	Parse map = new Parse();
 	@SuppressWarnings("unchecked")
