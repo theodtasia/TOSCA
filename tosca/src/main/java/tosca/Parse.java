@@ -4,9 +4,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.yaml.snakeyaml.Yaml;
-
 import java.io.FileInputStream;
-
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
@@ -64,7 +62,8 @@ public class Parse
  		}
 	  
 	
-	public void setMap(HashMap<String, HashMap<String, Object>> map) {
+	public void setMap(HashMap<String, HashMap<String, Object>> map) 
+	{
 		this.map = map;
 	}
 	

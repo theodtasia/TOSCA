@@ -1,26 +1,32 @@
 package tosca;
 
+import java.io.File;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map.Entry;
-
+import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
-import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
+import java.net.URL;
+
 
 public class DataType 
 {
 	Parse map = new Parse();
+	public String var = "data";
 	@SuppressWarnings("unchecked")
-	void dataTypes() 
+	void dataTypes() throws IOException 
 	{
 		String data_name = null;
 		Object derived_from = null;
@@ -208,10 +214,25 @@ public class DataType
 			
 		Parse.m = builder.build();
 		Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
-
-
+		WriteFiles.Create();
+		HTTPRepository repository = new HTTPRepository("http://192.168.1.4:7200/repositories/tosca");
+        File file = new File("data_type.ttl");
+        String baseURI = "http://192.168.1.4:7200/repositories/tosca";
+        try {
+           RepositoryConnection con = repository.getConnection();
+           try 
+           {
+              con.add(file, baseURI, RDFFormat.TURTLE);
+           }
+           finally {
+              con.close();
+           }
+        }
+        catch (RDF4JException e) 
+        {
+           // handle exception
+        }
 		}
-
 	}
 	
 }

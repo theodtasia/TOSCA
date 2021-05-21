@@ -18,28 +18,8 @@ data_types:
     default: "0.0.0.0/0" 
     required: true 
     type: string
-    
+ 
 node_types:
- sodalite.nodes.DockerHost:  
-  derived_from: tosca.nodes.SoftwareComponent
-  attributes:
-    public_address:
-     description: "Host's IP"
-     type: string
-    public_addresses:
-     description: "AHost's IP"
-     type: string
-  properties:
-    Address:
-     description: "Host's Snd IP"
-     type: map
-    public_addresses2:
-     description: "AHost's snd IP"
-     type: string    
-  capabilities:  
-    host:  
-     type: tosca.capabilities.Node
-     valid_source_types: [sodalite.nodes.DockerizedComponent]
  sodalite.nodes.OpenStack.SecurityRules:  
   derived_from: tosca.nodes.Root 
   properties:  
@@ -47,6 +27,11 @@ node_types:
     description: "Name of the security group in openstack."
     required: true 
     type: string 
+   timeout:
+    description: 'Timeout to instantiate the VM'
+    type: integer
+    default: '600'
+    required: false 
    ports:  
     required: false 
     constraints:  
@@ -56,8 +41,11 @@ node_types:
    group_description:  
     description: "Description of the security group in openstack"
     required: true 
-    type: string 
-    
+    type: string  
+  capabilities:  
+   feature:  
+    type: tosca.capabilities 
+     
 node_templates:
  snow-vm:  
   type: sodalite.nodes.OpenStack.VM

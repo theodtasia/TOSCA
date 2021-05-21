@@ -16,8 +16,12 @@
       <type>pom</type>
       <scope>import</scope>
     </dependency>
-
-    </dependencies>
+	<dependency>
+    	<groupId>com.ontotext.graphdb</groupId>
+    	<artifactId>graphdb-free-runtime</artifactId>
+    	<version>9.7.0</version>
+	</dependency>
+   </dependencies>
 </dependencyManagement>
 
 

@@ -1,20 +1,28 @@
 package tosca;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
 import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.http.HTTPRepository;
+import org.eclipse.rdf4j.rio.RDFFormat;
 
 public class NodeTemplates
 {
 	Parse map = new Parse();
 	@SuppressWarnings("unchecked")
-	void nodeTemplates() 
+	void nodeTemplates() throws IOException 
 	{	
 		String template_name = null;
 		String type=null;
@@ -158,7 +166,24 @@ public class NodeTemplates
 		
 
 		Parse.m = builder.build();
-
+		WriteFiles.Create();
+		HTTPRepository repository = new HTTPRepository("http://192.168.1.4:7200/repositories/tosca");	
+        File file = new File("node_templates.ttl");
+        String baseURI = "http://192.168.1.4:7200/repositories/tosca";
+        try {
+           RepositoryConnection con = repository.getConnection();
+           try 
+           {
+              con.add(file, baseURI, RDFFormat.TURTLE);
+           }
+           finally {
+              con.close();
+           }
+        }
+        catch (RDF4JException e) 
+        {
+           // handle exception
+        }
 
 	}
 	
