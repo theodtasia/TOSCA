@@ -2,7 +2,6 @@ package tosca;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -280,7 +279,7 @@ public class NodeType
 						if (fourth_level.get("entry_schema") != null) 
 						{
 							IRI entry_schema = Values.iri(ex,"entry_schema");
-							builder.add(RDF.TYPE,"owl:ObjectProperty");
+							builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
 						}
 						if (fourth_level.get("constraints") != null) 
 						{

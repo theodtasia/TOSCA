@@ -1,7 +1,6 @@
 package tosca;
 
 import java.io.File;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +17,6 @@ import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import java.net.URL;
 
 
 public class DataType 
@@ -96,11 +94,7 @@ public class DataType
 
 		    }
 			
-		
 			
-
-
-
 			//for properties
 			if(p[0]!=0)
 			{

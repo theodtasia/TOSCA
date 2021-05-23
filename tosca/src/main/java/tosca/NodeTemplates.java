@@ -2,11 +2,9 @@ package tosca;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
@@ -135,8 +133,7 @@ public class NodeTemplates
 					 {
 						builder.subject("ex:"+template_name);
 						builder.add("ex:"+key, value);
-					 }
-					
+					 }			
 					
 				}
 
@@ -162,7 +159,6 @@ public class NodeTemplates
 				}
 			}
 		}
-		
 		
 
 		Parse.m = builder.build();
