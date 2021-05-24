@@ -2,14 +2,11 @@ package tosca;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import org.yaml.snakeyaml.Yaml;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import org.eclipse.rdf4j.model.Model;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.Rio;
 
 //class for parsing users yaml file
 
@@ -23,7 +20,6 @@ public class Parse
 
    {
 
-		
 		   //reading file from user
 		
 	       Parse p = new Parse();
@@ -50,39 +46,36 @@ public class Parse
 	    	   data = yaml.load(inputStream);
 	    	   p.setMap(data);
 	    	   
-	    	   ArrayList<String> list = new ArrayList<String>();
-	    	   for ( String key : data.keySet() ) 
-	    	   {
-	    		   list.add(key);
-	    	   }
- 		
-	    	   //depends on key_type, calling the corresponding class
-	    	   for(String x : list)
+	    	   //depends on key type, call the corresponding class
+	    	   for(String key : data.keySet())
 	    	   {
 
-	    		   if(x.equals("node_types"))
+	    		   if(key.equals("node_types"))
 	    		   {
 	    			   NodeType node_t = new NodeType();
 	    			   node_t.nodeTypes();
 	    		   }
-	    		   if(x.equals("data_types"))
+	    		   if(key.equals("data_types"))
 	    		   {
 	    			   DataType data_t = new DataType();
 	    			   data_t.dataTypes();
 	    		   }
-	    		   if(x.equals("capability_types"))
+	    		   if(key.equals("capability_types"))
 	    		   {
 	    			   CapabilityType capability_t = new CapabilityType();
 	    			   capability_t.capabilityTypes();
 	    		   }
-	    		   if(x.equals("node_templates"))
+	    		   if(key.equals("node_templates"))
 	    		   {
 	    			   NodeTemplates templates = new NodeTemplates();
 	    			   templates.nodeTemplates();
 	    		   }
 	    	   }
 	    	   
-	    	   Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
+	       }
+	       else
+	       {
+	    	   System.out.println("File is empty");
 	       }
 
  		}
