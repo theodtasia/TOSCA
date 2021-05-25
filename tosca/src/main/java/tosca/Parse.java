@@ -15,7 +15,9 @@ public class Parse
 	
 	private static HashMap<String, HashMap<String, Object>> map;	
 	public static Model m;
-	
+	public static String folder;
+	public static String repo;
+
 	public static void main(String[] args) throws IOException
 
    {
@@ -23,14 +25,25 @@ public class Parse
 		   //reading file from user
 		
 	       Parse p = new Parse();
-	       String file = null; 
-	       
+	       String file=null,input = null; 
+	       folder=null;
 	       try 
 	       {
 	           BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));          
 	 	       System.out.print("Enter your yaml file: ");
-	            file = reader.readLine();
-	            
+	           file = reader.readLine();
+	           System.out.print("Do you want to save the output files to a specific folder? y/n ");
+	           input= reader.readLine(); 
+	           if(input.equals("y"))
+	           {
+		           System.out.print("Give the folder path, where you want to save the files:");   
+		           folder = reader.readLine(); 
+	           }
+	           
+	   			//http://192.168.1.4:7200/repositories/tosca
+	           System.out.print("Give the graphdb url repository");
+	           repo = reader.readLine(); 
+	           
 	        } 
 	       catch (IOException ioe) 
 	       {
@@ -90,6 +103,17 @@ public class Parse
 	{
 		return map;
 	}
+
+	public void setfolder(String folder) 
+	{
+		Parse.folder = folder;
+	}
+	
+	public String getfolder() 
+	{
+		return folder;
+	}
+	
 	
 }
  

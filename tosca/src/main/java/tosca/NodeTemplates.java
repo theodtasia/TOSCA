@@ -163,9 +163,10 @@ public class NodeTemplates
 
 		Parse.m = builder.build();
 		WriteFiles.Create();
-		HTTPRepository repository = new HTTPRepository("http://192.168.1.4:7200/repositories/tosca");	
+		String url=Parse.repo;
+		HTTPRepository repository = new HTTPRepository(url);
+        String baseURI = url;
         File file = new File("node_templates.ttl");
-        String baseURI = "http://192.168.1.4:7200/repositories/tosca";
         try {
            RepositoryConnection con = repository.getConnection();
            try 

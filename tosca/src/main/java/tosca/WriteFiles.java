@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.rio.Rio;
 
 public class WriteFiles 
 {
+	
 	public static void Create() throws IOException 
 	{
 		
@@ -26,11 +27,14 @@ public class WriteFiles
       	        flag = true;
             }
         }
-		
-		File file = null;	
+		File file = null;
+        String f = Parse.folder;	
+
+         if(f==null)
+        {
 		try
 		{
-			if(caller_class.equals("tosca.DataType"))
+		  	if(caller_class.equals("tosca.DataType"))
 			{
 				file = new File("data_type.ttl");
 			}
@@ -55,6 +59,7 @@ public class WriteFiles
 
 						System.out.println("File " + file.getName() + " updated at " + System.getProperty("user.dir"));
 			}
+		  
 		} 
 		catch (IOException e) 
 		{
@@ -84,6 +89,69 @@ public class WriteFiles
 		}		
 		
 	  }
+	
+	else
+	{
+		{
+			try
+			{
+			  	if(caller_class.equals("tosca.DataType"))
+				{
+					file = new File(f+"\\ data_type.ttl");
+					System.out.println(file);
+				}
+				else if(caller_class.equals("tosca.NodeType"))
+				{
+					file = new File(f+"\\ node_type.ttl");
+				}
+				else if(caller_class.equals("tosca.CapabilityType"))
+				{
+					file = new File(f+"\\ capability_type.ttl");
+				}
+				else if(caller_class.equals("tosca.NodeTemplates"))
+				{
+					file = new File(f+"\\ node_templates.ttl");
+				}
+				if (file.createNewFile()) 
+				{
+							System.out.println("File created: " + file.getName() + " at " + f);
+				}	 
+				else
+				{		
 
+							System.out.println("File " + file.getName() + " updated at " + f);
+				}
+			  
+			} 
+			catch (IOException e) 
+			{
+				System.out.println("An error occurred.");
+				e.printStackTrace();
+			}
+			FileOutputStream out = new FileOutputStream(file.getName());	
+			RDFWriter writer = Rio.createWriter(RDFFormat.TURTLE, out);	
+			System.getProperty("user.dir");
+			try 
+			{
+			  writer.startRDF();
+			  for (Statement st: Parse.m)
+			  {
+			    writer.handleStatement(st);
+			  }
+			  writer.endRDF();
+			}
+			catch (RDFHandlerException e) 
+			{
+			 // oh no, do something!
+			}
+			finally 
+			{
+			  out.close();
+			
+			}		
+			
+		  }
 	}
 
+	}
+}

@@ -209,9 +209,11 @@ public class DataType
 		Parse.m = builder.build();
 		Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
 		WriteFiles.Create();
-		HTTPRepository repository = new HTTPRepository("http://192.168.1.4:7200/repositories/tosca");
+		String url=Parse.repo;
+
+		HTTPRepository repository = new HTTPRepository(url);
+        String baseURI = url;
         File file = new File("data_type.ttl");
-        String baseURI = "http://192.168.1.4:7200/repositories/tosca";
         try {
            RepositoryConnection con = repository.getConnection();
            try 
