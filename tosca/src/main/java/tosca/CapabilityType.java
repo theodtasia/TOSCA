@@ -266,7 +266,16 @@ public class CapabilityType
 						if (fourth_level.get("entry_schema") != null) 
 						{
 							IRI entry_schema = Values.iri(ex,"entry_schema");
-							builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
+							if ((fifth_level.get("type").equals("string")) || (fifth_level.get("type").equals("integer")) ||(fifth_level.get("type").equals("float")) || (fifth_level.get("type").equals("boolean")))
+							{
+								builder.add(entry_schema,RDF.TYPE,"owl:DatatypeProperty");
+								builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+							}
+							else
+							{
+								builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
+								builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+							}
 						}
 						if (fourth_level.get("constraints") != null) 
 						{
@@ -283,6 +292,13 @@ public class CapabilityType
 									{
 										builder.add(constr,RDF.LIST);
 										builder.add(constr, val);
+										BNode r15 = Values.bnode();
+										builder.subject("ex:"+ properties_names.get(j));
+										builder.add(RDFS.SUBCLASSOF, r15);
+										builder.subject(r15);
+										builder.add(RDF.TYPE, OWL.RESTRICTION);
+										builder.add(OWL.ONPROPERTY, properties_names.get(j));
+										builder.add(OWL.SOMEVALUESFROM, constr);
 									}
 									if(cons.equals("min_length"))
 									{

@@ -173,6 +173,16 @@ public class NodeType
 						{
 							
 							IRI entry_schema = Values.iri(ex,"entry_schema");
+							if ((fifth_level.get("type").equals("string")) || (fifth_level.get("type").equals("integer")) ||(fifth_level.get("type").equals("float")) || (fifth_level.get("type").equals("boolean")))
+							{
+								builder.add(entry_schema,RDF.TYPE,"owl:DatatypeProperty");
+								builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+							}
+							else
+							{
+								builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
+								builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+							}
 							builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
 						}
 				
@@ -214,6 +224,13 @@ public class NodeType
 								{
 									builder.add(constr,RDF.LIST);
 									builder.add(constr, val);
+									BNode r15 = Values.bnode();
+									builder.subject("ex:"+ properties_names.get(j));
+									builder.add(RDFS.SUBCLASSOF, r15);
+									builder.subject(r15);
+									builder.add(RDF.TYPE, OWL.RESTRICTION);
+									builder.add(OWL.ONPROPERTY, properties_names.get(j));
+									builder.add(OWL.SOMEVALUESFROM, constr);
 								}
 								if(cons.equals("min_length"))
 								{
@@ -337,35 +354,7 @@ public class NodeType
 
 							}
 						}
-						if (fourth_level.get("constraints") != null) 
-						{
-							IRI constraints = Values.iri(ex,"constraints");
-							builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
-							for (Entry<String, Object> entry: fifth_level.entrySet()) 
-							{
-								String cons = entry.getKey();
-								IRI constr = Values.iri(ex,cons);
-								Object val = entry.getValue();
-								builder.subject(constraints);
-								if(cons.equals("valid_values"))
-								{
-									builder.add(constr,RDF.LIST);
-									builder.add(constr, val);
-								}
-								if(cons.equals("min_length"))
-								{
-									builder.add(constr,RDFS.RANGE,"string");
-									builder.add(constr, val);
-								
-								}
-								if(cons.equals("max_length"))
-								{
-									builder.add(constr,RDFS.RANGE,"string");
-									builder.add(constr, val);
-								
-								}
-							}
-						}
+						
 
 				
 				}

@@ -8,7 +8,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import org.eclipse.rdf4j.model.Model;
 
-//class for parsing users yaml file
+//class for reading users input, parsing and handling the yaml file 
 
 public class Parse 
 {
@@ -30,7 +30,7 @@ public class Parse
 	       try 
 	       {
 	           BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));          
-	 	       System.out.print("Enter your yaml file: ");
+	 	       System.out.print("Give your yaml file: ");
 	           file = reader.readLine();
 	           System.out.print("Do you want to save the output files to a specific folder? y/n ");
 	           input= reader.readLine(); 

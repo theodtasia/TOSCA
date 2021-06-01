@@ -19,6 +19,7 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 
+//class for handling data types
 public class DataType 
 {
 	Parse map = new Parse();
@@ -29,7 +30,7 @@ public class DataType
 		String data_name = null;
 		Object derived_from = null;
 		HashMap<String, Object> map2 = new HashMap<>();
-		ArrayList<String> properties_names = new ArrayList<>();
+		ArrayList<String> properties_names = new ArrayList<>(); //save the properties name for using the later
 		HashMap<String, Object> second_level = map2;
 		HashMap<String, Object> third_level = map2;
 		HashMap<String, Object> fourth_level = map2;
@@ -63,19 +64,21 @@ public class DataType
 			.add(toscaProperty,RDFS.RANGE,"boolean");
 			
 			
-			//System.out.println(key);
+			// second level of hashmap
+			// key names = [derived_from,properties,entry_schema,constraints]
+			
 			second_level = ((HashMap<String, Object>) map2.get(data_name));
 			for (String key2 : second_level.keySet()) 
 			{	
 				
-				
-
-				//System.out.println(key2);
+				// for derived from
 				if (key2.equals("derived_from")) 
 				{
 					derived_from = second_level.get("derived_from"); 
 					builder.add(RDFS.SUBCLASSOF, "ex:"+ derived_from);
 				} 
+				
+				//for properties
 				else if (key2.equals("properties"))
 				{
 					third_level = (HashMap<String, Object>) second_level.get("properties");	
@@ -83,15 +86,66 @@ public class DataType
 					for (String key3 : third_level.keySet()) 
 					{
 						properties_names.add(key3);
-				    }
-				
+				    }				
 				}
+				
+				//for datatype description
 				else if(key2.equals("description")) 
 				{
 					builder.add(data_name,tosca_description,Values.literal(fourth_level.get("description")));
 				}
 				
-
+				//for entry schema
+				else if (key2.equals("entry_schema")) 
+				{
+					IRI entry_schema = Values.iri(ex,"entry_schema");
+					if ((fifth_level.get("type").equals("string")) || (fifth_level.get("type").equals("integer")) ||(fifth_level.get("type").equals("float")) || (fifth_level.get("type").equals("boolean")))
+					{
+						builder.add(entry_schema,RDF.TYPE,"owl:DatatypeProperty");
+						builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+					}
+					else
+					{
+						builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
+						builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+					}
+				
+				}
+				
+				//for constraints
+				if (key2.equals("constraints")) 
+				{
+					IRI constraints = Values.iri(ex,"constraints");
+					builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
+					fifth_level=(HashMap<String, Object>) fourth_level.get("constraints");
+					for (Entry<String, Object> entry: fifth_level.entrySet()) 
+					{
+						String cons = entry.getKey();
+						IRI constr = Values.iri(ex,cons);
+						Object val = entry.getValue();
+						builder.subject(constraints);
+						if(cons.equals("valid_values"))
+						{
+							builder.add(constr,RDF.LIST);
+							builder.add(constr, val);
+						}
+						if(cons.equals("min_length"))
+						{
+							builder.add(constr,RDFS.RANGE,"string");
+							builder.add(constr, val);
+							
+						}
+						if(cons.equals("max_length"))
+						{
+							builder.add(constr,RDFS.RANGE,"string");
+							builder.add(constr, val);
+							
+						}
+					}
+					
+				}
+		
+				
 		    }
 			
 			
@@ -107,7 +161,8 @@ public class DataType
 					if (third_level.get(properties_names.get(j)) != null) 
 					{
 						fourth_level = (HashMap<String, Object>) third_level.get(properties_names.get(j));						
-						// check if the type is "normal" datatype or toscaType
+						
+						// check if the propertys type is a datatypeProperty or objectProperty toscaType
 						if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
 						{
 							builder.add(properties,RDF.TYPE,"owl:DatatypeProperty");
@@ -127,21 +182,37 @@ public class DataType
 							builder.add(properties,toscaType,fourth_level.get("type"));
 
 						}
+						
+						//for property description
 						if (fourth_level.get("description") != null) 
 						{
 							builder.add(properties,tosca_description,Values.literal(fourth_level.get("description")));
 						}
+						
+						//for property default
 						if (fourth_level.get("default") != null) 
 						{
 							builder.add(properties,toscaDefault,Values.literal(fourth_level.get("default")));
 
 						}
+						
+						//for entry_schema
 						if (fourth_level.get("entry_schema") != null) 
 						{
-							
 							IRI entry_schema = Values.iri(ex,"entry_schema");
-							builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
+							if ((fifth_level.get("type").equals("string")) || (fifth_level.get("type").equals("integer")) ||(fifth_level.get("type").equals("float")) || (fifth_level.get("type").equals("boolean")))
+							{
+								builder.add(entry_schema,RDF.TYPE,"owl:DatatypeProperty");
+								builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+							}
+							else
+							{
+								builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
+								builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+							}
 						}
+						
+						//for basic constraints
 						if (fourth_level.get("constraints") != null) 
 						{
 							IRI constraints = Values.iri(ex,"constraints");
@@ -157,6 +228,13 @@ public class DataType
 								{
 									builder.add(constr,RDF.LIST);
 									builder.add(constr, val);
+									BNode r15 = Values.bnode();
+									builder.subject("ex:"+ properties_names.get(j));
+									builder.add(RDFS.SUBCLASSOF, r15);
+									builder.subject(r15);
+									builder.add(RDF.TYPE, OWL.RESTRICTION);
+									builder.add(OWL.ONPROPERTY, properties_names.get(j));
+									builder.add(OWL.SOMEVALUESFROM, constr);
 								}
 								if(cons.equals("min_length"))
 								{
@@ -174,6 +252,7 @@ public class DataType
 							
 						}
 				
+						//for required
 						if (fourth_level.get("required") != null) 
 						{											
 							if(fourth_level.get("required").equals(true))
