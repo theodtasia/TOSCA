@@ -4,11 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
+import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -53,7 +55,7 @@ public class DataType
 			tosca_description = Values.iri(ex,"tosca_description");
 			toscaDefault=Values.iri(ex,"toscaDefault");
 			toscaProperty = Values.iri(ex,"toscaProperty");
-			toscaType = Values.iri(ex, "toscaType");	
+			toscaType = Values.iri(ex, "toscaType");
 			builder.subject(ex + data_name)
 			
 			.add(tosca_description,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
@@ -107,7 +109,7 @@ public class DataType
 					else
 					{
 						builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
-						builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+						builder.add(entry_schema,RDFS.RANGE,ex+fourth_level.get("type"));	
 					}
 				
 				}
@@ -116,31 +118,73 @@ public class DataType
 				if (key2.equals("constraints")) 
 				{
 					IRI constraints = Values.iri(ex,"constraints");
-					builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
 					fifth_level=(HashMap<String, Object>) fourth_level.get("constraints");
 					for (Entry<String, Object> entry: fifth_level.entrySet()) 
 					{
-						String cons = entry.getKey();
-						IRI constr = Values.iri(ex,cons);
-						Object val = entry.getValue();
-						builder.subject(constraints);
-						if(cons.equals("valid_values"))
-						{
-							builder.add(constr,RDF.LIST);
-							builder.add(constr, val);
-						}
-						if(cons.equals("min_length"))
-						{
-							builder.add(constr,RDFS.RANGE,"string");
-							builder.add(constr, val);
-							
-						}
-						if(cons.equals("max_length"))
-						{
-							builder.add(constr,RDFS.RANGE,"string");
-							builder.add(constr, val);
-							
-						}
+						
+							String cons = entry.getKey();
+							IRI constr = Values.iri(ex,cons);
+							Object val = entry.getValue();
+							@SuppressWarnings("rawtypes")
+							ArrayList listval = (ArrayList) val;
+                            								
+							if(cons.equals("valid_values"))
+							{
+								ArrayList<BNode> bnodes = new ArrayList<BNode>(listval.size()); //arraylist for the bnodes that we will need 
+								List<BNode> unionList = new ArrayList<BNode>(); //list for all the blank nodes that are part of the union
+
+								BNode r6 = Values.bnode(); 
+								builder.subject("ex:"+data_name); //set subject to the class
+								builder.add(RDFS.SUBCLASSOF, r6); 
+								builder.subject(r6);
+								int b=0;//counter
+								
+								for (Object temp : listval) //for each element in valid values list
+								{
+                                    bnodes.add(Values.bnode()); //add a bnode to the bnode list
+									unionList.add(bnodes.get(b)); //add the bnode to the union list
+									builder.subject(bnodes.get(b)); 
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property protocol
+								    builder.add(OWL.ONPROPERTY,data_name);
+									builder.add(OWL.HASVALUE,temp);
+						            b++;
+								}
+								  BNode head = Values.bnode(); // blank node for the head of the list
+
+								  RDFCollections.asRDF(unionList, head, builder.build());
+
+			 					  builder.subject(r6).add(RDF.TYPE, OWL.CLASS).add(OWL.UNIONOF, head);
+								
+							}
+							if(cons.equals("min_length")||cons.equals("max_length"))
+							{
+								builder.add(constr,RDFS.RANGE,"string");
+								BNode r11 = Values.bnode();
+								builder.subject("ex:"+data_name); //set subject to the class
+								builder.add(RDFS.SUBCLASSOF, r11); 
+								builder.subject(r11);
+								builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
+							    builder.add(OWL.ONPROPERTY,data_name);
+								builder.add(OWL.SOMEVALUESFROM,constraints);
+								
+								BNode r12 = Values.bnode();
+								builder.subject(r12);
+								builder.add(RDF.TYPE, OWL.RESTRICTION); //property some constraints
+							    builder.add(OWL.ONPROPERTY,constraints);
+								builder.add(OWL.SOMEVALUESFROM,constr);
+								
+								BNode r13 = Values.bnode();
+								builder.subject(r13);
+								builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
+							    builder.add(OWL.ONPROPERTY,constraints);
+								builder.add(OWL.SOMEVALUESFROM,constr);
+								
+								BNode r14 = Values.bnode();
+								builder.subject(r14);
+								builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
+							    builder.add(OWL.ONPROPERTY,constr);
+								builder.add(OWL.HASVALUE,val);								
+							}
 					}
 					
 				}
@@ -158,6 +202,7 @@ public class DataType
 				{
 					IRI properties = Values.iri(ex,properties_names.get(j));
 					builder.add(properties,RDF.TYPE,"owl:DatatypeProperty");
+					
 					if (third_level.get(properties_names.get(j)) != null) 
 					{
 						fourth_level = (HashMap<String, Object>) third_level.get(properties_names.get(j));						
@@ -173,7 +218,7 @@ public class DataType
 						else if(((String) fourth_level.get("type")).startsWith("tosca"))
 						{
 							builder.add(properties,RDF.TYPE,"owl:ObjectProperty");
-							builder.add(properties,RDFS.RANGE,fourth_level.get("type"));
+							builder.add(properties,RDFS.RANGE,ex+fourth_level.get("type"));
 
 						}
 						else 
@@ -208,7 +253,7 @@ public class DataType
 							else
 							{
 								builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
-								builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+								builder.add(entry_schema,RDFS.RANGE,ex+fourth_level.get("type"));	
 							}
 						}
 						
@@ -223,30 +268,59 @@ public class DataType
 								String cons = entry.getKey();
 								IRI constr = Values.iri(ex,cons);
 								Object val = entry.getValue();
-								builder.subject(constraints);
+								
 								if(cons.equals("valid_values"))
 								{
-									builder.add(constr,RDF.LIST);
-									builder.add(constr, val);
-									BNode r15 = Values.bnode();
-									builder.subject("ex:"+ properties_names.get(j));
-									builder.add(RDFS.SUBCLASSOF, r15);
-									builder.subject(r15);
-									builder.add(RDF.TYPE, OWL.RESTRICTION);
-									builder.add(OWL.ONPROPERTY, properties_names.get(j));
-									builder.add(OWL.SOMEVALUESFROM, constr);
-								}
-								if(cons.equals("min_length"))
-								{
-									builder.add(constr,RDFS.RANGE,"string");
-									builder.add(constr, val);
+									@SuppressWarnings("rawtypes")
+									ArrayList listval = (ArrayList) val;
+									ArrayList<BNode> bnodes = new ArrayList<BNode>(listval.size()); //arraylist for the bnodes that we will need 
+									List<BNode> unionList = new ArrayList<BNode>(); //list for all the blank nodes that are part of the union
+	
+									BNode r6 = Values.bnode(); 
+									builder.subject("ex:"+data_name); //set subject to the class
+									builder.add(RDFS.SUBCLASSOF, r6); 
+									builder.subject(r6);
+									int b=0;//counter
+									
+									for (Object temp : listval) //for each element in valid values list
+									{
+                                        bnodes.add(Values.bnode()); //add a bnode to the bnode list
+										unionList.add(bnodes.get(b)); //add the bnode to the union list
+										builder.subject(bnodes.get(b)); 
+										builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property protocol
+									    builder.add(OWL.ONPROPERTY,properties);
+										builder.add(OWL.HASVALUE,temp);
+							            b++;
+									}
+									  BNode head = Values.bnode(); // blank node for the head of the list
+
+									  RDFCollections.asRDF(unionList, head, builder.build());
+
+				 					  builder.subject(r6).add(RDF.TYPE, OWL.CLASS).add(OWL.UNIONOF, head);
 									
 								}
-								if(cons.equals("max_length"))
+								if(cons.equals("min_length")||cons.equals("max_length"))
 								{
 									builder.add(constr,RDFS.RANGE,"string");
-									builder.add(constr, val);
+									BNode r11 = Values.bnode();
+									builder.subject("ex:"+data_name); //set subject to the class
+									builder.add(RDFS.SUBCLASSOF, r11); 
+									builder.subject(r11);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
+								    builder.add(OWL.ONPROPERTY,properties);
+									builder.add(OWL.SOMEVALUESFROM,constraints);
 									
+									BNode r12 = Values.bnode();
+									builder.subject(r12);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //property some constraints
+								    builder.add(OWL.ONPROPERTY,constraints);
+									builder.add(OWL.SOMEVALUESFROM,constr);
+									
+									BNode r14 = Values.bnode();
+									builder.subject(r14);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
+								    builder.add(OWL.ONPROPERTY,constr);
+									builder.add(OWL.HASVALUE,val);								
 								}
 							}
 							
@@ -285,9 +359,11 @@ public class DataType
 			}
 		
 			
+		
 		Parse.m = builder.build();
 		Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
 		WriteFiles.Create();
+		
 		String url=Parse.repo;
 
 		HTTPRepository repository = new HTTPRepository(url);

@@ -4,11 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
+import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -53,7 +55,8 @@ public class CapabilityType
 			toscaDefault=Values.iri(ex,"toscaDefault");
 			toscaProperty = Values.iri(ex,"toscaProperty");
 			toscaType = Values.iri(ex, "toscaType");
-			requirements = Values.iri(ex, "requirements");	
+			requirements = Values.iri(ex, "requirements");
+
 			builder.subject(ex + capability_name)
 			.add(requirements,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
 			.add(tosca_description,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
@@ -63,15 +66,10 @@ public class CapabilityType
 			.add(toscaProperty,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
 			.add(toscaProperty,RDFS.RANGE,"boolean");
 			
-			
-			//System.out.println(key);
 			second_level = ((HashMap<String, Object>) map2.get(capability_name));
 			for (String key2 : second_level.keySet()) 
 			{	
 				
-				
-
-				//System.out.println(key2);
 				if (key2.equals("derived_from")) 
 				{
 					derived_from = second_level.get("derived_from"); 
@@ -93,10 +91,7 @@ public class CapabilityType
 					a[0]=1;
 					for (String key3 : third_level.keySet()) 
 					{
-						// fourth_level= (HashMap<String, Object>) third_level.get(key3);
 						attribute_names.add(key3);
-
-						// System.out.println("F" + fourth_level);
 
 				    }
 				}
@@ -106,8 +101,6 @@ public class CapabilityType
 					if (fourth_level.get("valid_source_types") != null) 
 					{
 						builder.add(valid_source_types,RDF.TYPE,"owl:ObjectProperty");
-						builder.add(valid_source_types,RDF.LIST);
-
 					}
 				}
 
@@ -138,7 +131,7 @@ public class CapabilityType
 						else if(((String) fourth_level.get("type")).startsWith("tosca"))
 						{
 							builder.add(properties,RDF.TYPE,"owl:ObjectProperty");
-							builder.add(properties,RDFS.RANGE,fourth_level.get("type"));
+							builder.add(properties,RDFS.RANGE,ex+fourth_level.get("type"));
 
 						}
 						else
@@ -196,23 +189,65 @@ public class CapabilityType
 								String cons = entry.getKey();
 								IRI constr = Values.iri(ex,cons);
 								Object val = entry.getValue();
-								builder.subject(constraints);
+								@SuppressWarnings("rawtypes")
+								ArrayList listval = (ArrayList) val;
+                                								
 								if(cons.equals("valid_values"))
 								{
-									builder.add(constr,RDF.LIST);
-									builder.add(constr, val);
+									ArrayList<BNode> bnodes = new ArrayList<BNode>(listval.size()); //arraylist for the bnodes that we will need 
+									List<BNode> unionList = new ArrayList<BNode>(); //list for all the blank nodes that are part of the union
+	
+									BNode r6 = Values.bnode(); 
+									builder.subject("ex:"+capability_name); //set subject to the class
+									builder.add(RDFS.SUBCLASSOF, r6); 
+									builder.subject(r6);
+									int b=0;//counter
+									
+									for (Object temp : listval) //for each element in valid values list
+									{
+                                        bnodes.add(Values.bnode()); //add a bnode to the bnode list
+										unionList.add(bnodes.get(b)); //add the bnode to the union list
+										builder.subject(bnodes.get(b)); 
+										builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property protocol
+									    builder.add(OWL.ONPROPERTY,properties);
+										builder.add(OWL.HASVALUE,temp);
+							            b++;
+									}
+									  BNode head = Values.bnode(); // blank node for the head of the list
+
+									  RDFCollections.asRDF(unionList, head, builder.build());
+
+				 					  builder.subject(r6).add(RDF.TYPE, OWL.CLASS).add(OWL.UNIONOF, head);
+									
 								}
-								if(cons.equals("min_length"))
+								if(cons.equals("min_length")||cons.equals("max_length"))
 								{
 									builder.add(constr,RDFS.RANGE,"string");
-									builder.add(constr, val);
-								
-								}
-								if(cons.equals("max_length"))
-								{
-									builder.add(constr,RDFS.RANGE,"string");
-									builder.add(constr, val);
-								
+									BNode r11 = Values.bnode();
+									builder.subject("ex:"+capability_name); //set subject to the class
+									builder.add(RDFS.SUBCLASSOF, r11); 
+									builder.subject(r11);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
+								    builder.add(OWL.ONPROPERTY,properties);
+									builder.add(OWL.SOMEVALUESFROM,constraints);
+									
+									BNode r12 = Values.bnode();
+									builder.subject(r12);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //property some constraints
+								    builder.add(OWL.ONPROPERTY,constraints);
+									builder.add(OWL.SOMEVALUESFROM,constr);
+									
+									BNode r13 = Values.bnode();
+									builder.subject(r13);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
+								    builder.add(OWL.ONPROPERTY,constraints);
+									builder.add(OWL.SOMEVALUESFROM,constr);
+									
+									BNode r14 = Values.bnode();
+									builder.subject(r14);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
+								    builder.add(OWL.ONPROPERTY,constr);
+									builder.add(OWL.HASVALUE,val);								
 								}
 							}
 						}
@@ -280,41 +315,77 @@ public class CapabilityType
 						if (fourth_level.get("constraints") != null) 
 						{
 							
-								IRI constraints = Values.iri(ex,"constraints");
-								builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
-								for (Entry<String, Object> entry: fifth_level.entrySet()) 
+							IRI constraints = Values.iri(ex,"constraints");
+							builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
+							for (Entry<String, Object> entry: fifth_level.entrySet()) 
+							{
+								String cons = entry.getKey();
+								IRI constr = Values.iri(ex,cons);
+								Object val = entry.getValue();
+								@SuppressWarnings("rawtypes")
+								ArrayList listval = (ArrayList) val;
+                                								
+								if(cons.equals("valid_values"))
 								{
-									String cons = entry.getKey();
-									IRI constr = Values.iri(ex,cons);
-									Object val = entry.getValue();
-									builder.subject(constraints);
-									if(cons.equals("valid_values"))
-									{
-										builder.add(constr,RDF.LIST);
-										builder.add(constr, val);
-										BNode r15 = Values.bnode();
-										builder.subject("ex:"+ properties_names.get(j));
-										builder.add(RDFS.SUBCLASSOF, r15);
-										builder.subject(r15);
-										builder.add(RDF.TYPE, OWL.RESTRICTION);
-										builder.add(OWL.ONPROPERTY, properties_names.get(j));
-										builder.add(OWL.SOMEVALUESFROM, constr);
-									}
-									if(cons.equals("min_length"))
-									{
-										builder.add(constr,RDFS.RANGE,"string");
-										builder.add(constr, val);
+									ArrayList<BNode> bnodes = new ArrayList<BNode>(listval.size()); //arraylist for the bnodes that we will need 
+									List<BNode> unionList = new ArrayList<BNode>(); //list for all the blank nodes that are part of the union
+	
+									BNode r6 = Values.bnode(); 
+									builder.subject("ex:"+capability_name); //set subject to the class
+									builder.add(RDFS.SUBCLASSOF, r6); 
+									builder.subject(r6);
+									int b=0;//counter
 									
-									}
-									if(cons.equals("max_length"))
+									for (Object temp : listval) //for each element in valid values list
 									{
-										builder.add(constr,RDFS.RANGE,"string");
-										builder.add(constr, val);
-									
+                                        bnodes.add(Values.bnode()); //add a bnode to the bnode list
+										unionList.add(bnodes.get(b)); //add the bnode to the union list
+										builder.subject(bnodes.get(b)); 
+										builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property protocol
+									    builder.add(OWL.ONPROPERTY,attribute);
+										builder.add(OWL.HASVALUE,temp);
+							            b++;
 									}
+									  BNode head = Values.bnode(); // blank node for the head of the list
+
+									  RDFCollections.asRDF(unionList, head, builder.build());
+
+				 					  builder.subject(r6).add(RDF.TYPE, OWL.CLASS).add(OWL.UNIONOF, head);
+									
 								}
+								if(cons.equals("min_length")||cons.equals("max_length"))
+								{
+									builder.add(constr,RDFS.RANGE,"string");
+									BNode r11 = Values.bnode();
+									builder.subject("ex:"+capability_name); //set subject to the class
+									builder.add(RDFS.SUBCLASSOF, r11); 
+									builder.subject(r11);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
+								    builder.add(OWL.ONPROPERTY,attribute);
+									builder.add(OWL.SOMEVALUESFROM,constraints);
+									
+									BNode r12 = Values.bnode();
+									builder.subject(r12);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //property some constraints
+								    builder.add(OWL.ONPROPERTY,constraints);
+									builder.add(OWL.SOMEVALUESFROM,constr);
+									
+									BNode r13 = Values.bnode();
+									builder.subject(r13);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
+								    builder.add(OWL.ONPROPERTY,constraints);
+									builder.add(OWL.SOMEVALUESFROM,constr);
+									
+									BNode r14 = Values.bnode();
+									builder.subject(r14);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
+								    builder.add(OWL.ONPROPERTY,constr);
+									builder.add(OWL.HASVALUE,val);								
+								}
+							}
 						}
 						builder.add(attribute,toscaProperty,"false");
+						
 						if (fourth_level.get("required") != null) 
 						{											
 							if(fourth_level.get("required").equals(true))
@@ -398,10 +469,7 @@ public class CapabilityType
            // handle exception
         }
 
-
-
-		}
-
+		}		
 	}
 }
 	

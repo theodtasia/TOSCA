@@ -25,8 +25,11 @@ public class Parse
 		   //reading file from user
 		
 	       Parse p = new Parse();
-	       String file=null,input = null; 
+	       String file=null,input = "a"; 
 	       folder=null;
+	       
+	       while(!(input.equals("y")||input.equals("n")))
+	       {
 	       try 
 	       {
 	           BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));          
@@ -38,6 +41,12 @@ public class Parse
 	           {
 		           System.out.print("Give the folder path, where you want to save the files:");   
 		           folder = reader.readLine(); 
+	           }
+	           else if (!input.equals("n"))
+	           {
+		           System.out.print("Invalid input. Run again");
+		           break;
+   
 	           }
 	           
 	   			//http://192.168.1.4:7200/repositories/tosca
@@ -90,7 +99,7 @@ public class Parse
 	       {
 	    	   System.out.println("File is empty");
 	       }
-
+	       }
  		}
 	  
 	

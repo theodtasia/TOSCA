@@ -39,11 +39,11 @@ public class NodeTemplates
 		map2 = map.getMap().get("node_templates");
 		ModelBuilder builder = new ModelBuilder();
 		String tosca = "https://intelligence.csd.auth.gr/ontologies/tosca/";
-		builder.setNamespace("tosca", "https://intelligence.csd.auth.gr/ontologies/tosca/").setNamespace("ex", "http://examples/");
+		builder.setNamespace("tosca", "https://intelligence.csd.auth.gr/ontologies/tosca/");
 		for (String key : map2.keySet()) 
 		{
 			template_name = key;
-			builder.subject("ex:"+template_name);
+			builder.subject(tosca+template_name);
 			IRI tosca_description = Values.iri(tosca,"tosca_description");
 			second_level = ((HashMap<String, Object>) map2.get(template_name));
 			for (String key2 : second_level.keySet()) 
@@ -51,7 +51,7 @@ public class NodeTemplates
 					if (key2.equals("type")) 
 					{
 						type = (String) second_level.get("type"); 
-						builder.add(RDF.TYPE, "ex:"+type);
+						builder.add(RDF.TYPE, tosca+type);
 					}
 					else if(key2.equals("description")) 
 					{
@@ -73,11 +73,7 @@ public class NodeTemplates
 						a[0]=1;
 						for (String key3 : third_level.keySet()) 
 						{
-							// fourth_level= (HashMap<String, Object>) third_level.get(key3);
 							attribute_names.add(key3);
-
-							// System.out.println("F" + fourth_level);
-
 					    }
 					} 
 					else if (key2.equals("requirements")) 
@@ -91,6 +87,7 @@ public class NodeTemplates
 					}
 		    }
 			List<BNode> vars = new ArrayList<>();
+			
 			//for properties
 			if(p[0]!=0)
 			{
@@ -105,7 +102,7 @@ public class NodeTemplates
 					{  
 						int v=0;
 						BNode head = Values.bnode();
-						builder.add("ex:"+key1, head)
+						builder.add(tosca+key1, head)
 						.subject(head);
 						fourth_level = (HashMap<String, Object>) third_level.get(key1);
 						List<BNode> levelList = new ArrayList<BNode>();
@@ -117,43 +114,42 @@ public class NodeTemplates
 							builder.subject(vars.get(v));
 							for (String key5 : fifth_level.keySet()) 
 							{
-								builder.add("ex:"+key5, fifth_level.get(key5));
+								builder.add(tosca+key5, fifth_level.get(key5));
 							}
 							v++;
 
 						}
 						
-
 					    RDFCollections.asRDF(levelList, head, builder.build());
-
-
 					
 					 }
 					 else
 					 {
-						builder.subject("ex:"+template_name);
-						builder.add("ex:"+key, value);
+						builder.subject(tosca+template_name);
+						builder.add(tosca+key, value);
 					 }			
 					
 				}
-
 			}
+			
 			if(r[0]!=0)
 			{
 				r[0]=0;
 				BNode r2 = Values.bnode();
 				BNode r3 = Values.bnode();
 				third_level = (HashMap<String, Object>) second_level.get("requirements");
+				IRI requirements= Values.iri(tosca,"requirements");
+
 				for (int j = 0; j < requirements_names.size(); j++) 
 				{
-					builder.subject("ex:"+template_name)
-					.add("tosca:requirements", r2);
+					builder.subject(tosca+template_name)
+					.add(requirements, r2);
 					Object key1 = requirements_names.get(j);
-					builder.subject(r2).add("tosca:"+key1, r3);
+					builder.subject(r2).add(tosca+key1, r3);
 					fifth_level=(HashMap<String, Object>) third_level.get(key1);
 					for (String key5 : fifth_level.keySet()) 
 					{
-						builder.add("tosca:"+key5, fifth_level.get(key5));
+						builder.add(tosca+key5,tosca+fifth_level.get(key5));
 					}
 					
 				}
