@@ -83,7 +83,11 @@ public class CapabilityType
 					{
 						properties_names.add(key3);
 				    }
-				
+				}
+					//for datatype description
+				else if(key2.equals("description")) 
+				{
+						builder.add(capability_name,tosca_description,Values.literal(fourth_level.get("description")));
 				}
 				else if (key2.equals("attributes")) 
 				{
@@ -343,7 +347,8 @@ public class CapabilityType
 										builder.subject(bnodes.get(b)); 
 										builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property protocol
 									    builder.add(OWL.ONPROPERTY,attribute);
-										builder.add(OWL.HASVALUE,temp);
+										builder.add(OWL.ALLVALUESFROM,ex+temp);
+
 							            b++;
 									}
 									  BNode head = Values.bnode(); // blank node for the head of the list

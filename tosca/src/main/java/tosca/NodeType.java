@@ -19,6 +19,7 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 //class for handling node types
+import org.eclipse.rdf4j.rio.Rio;
 
 public class NodeType 
 {
@@ -220,20 +221,21 @@ public class NodeType
 						//for constraints
 						if (fourth_level.get("constraints") != null) 
 						{
-							System.out.println("ij");
 							IRI constraints = Values.iri(ex,"constraints");
-							
+							builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
+							fifth_level=(HashMap<String, Object>) fourth_level.get("constraints");
+
 							for (Entry<String, Object> entry: fifth_level.entrySet()) 
 							{
 								String cons = entry.getKey();
 								IRI constr = Values.iri(ex,cons);
 								Object val = entry.getValue();
-								@SuppressWarnings("rawtypes")
-								ArrayList listval = (ArrayList) val;
 								builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
-				
+
 								if(cons.equals("valid_values"))
 								{
+									@SuppressWarnings("rawtypes")
+									ArrayList listval = (ArrayList) val;
 									ArrayList<BNode> bnodes = new ArrayList<BNode>(listval.size()); //arraylist for the bnodes that we will need 
 									List<BNode> unionList = new ArrayList<BNode>(); //list for all the blank nodes that are part of the union
 	
@@ -268,24 +270,18 @@ public class NodeType
 									builder.add(RDFS.SUBCLASSOF, r11); 
 									builder.subject(r11);
 									builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
-								    builder.add(OWL.ONPROPERTY,properties);
+								    builder.add(OWL.ONPROPERTY,properties);//property some constraints
 									builder.add(OWL.SOMEVALUESFROM,constraints);
 									
 									BNode r12 = Values.bnode();
 									builder.subject(r12);
-									builder.add(RDF.TYPE, OWL.RESTRICTION); //property some constraints
+									builder.add(RDF.TYPE, OWL.RESTRICTION); 
 								    builder.add(OWL.ONPROPERTY,constraints);
-									builder.add(OWL.SOMEVALUESFROM,constr);
-									
-									BNode r13 = Values.bnode();
-									builder.subject(r13);
-									builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
-								    builder.add(OWL.ONPROPERTY,constraints);
-									builder.add(OWL.SOMEVALUESFROM,constr);
+									builder.add(OWL.SOMEVALUESFROM,constr);//constraints some length
 									
 									BNode r14 = Values.bnode();
 									builder.subject(r14);
-									builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
+									builder.add(RDF.TYPE, OWL.RESTRICTION); 
 								    builder.add(OWL.ONPROPERTY,constr);
 									builder.add(OWL.HASVALUE,val);								
 								}
@@ -361,18 +357,22 @@ public class NodeType
 						if (fourth_level.get("constraints") != null) 
 						{
 							
+
 								IRI constraints = Values.iri(ex,"constraints");
 								builder.add(constraints,RDF.TYPE,"owl:ObjectProperty");
+								fifth_level=(HashMap<String, Object>) fourth_level.get("constraints");
+
 								for (Entry<String, Object> entry: fifth_level.entrySet()) 
 								{
 									String cons = entry.getKey();
 									IRI constr = Values.iri(ex,cons);
 									Object val = entry.getValue();
-									@SuppressWarnings("rawtypes")
-									ArrayList listval = (ArrayList) val;
-	                                								
+															
 									if(cons.equals("valid_values"))
 									{
+										@SuppressWarnings("rawtypes")
+										ArrayList listval = (ArrayList) val;
+	                                		
 										ArrayList<BNode> bnodes = new ArrayList<BNode>(listval.size()); //arraylist for the bnodes that we will need 
 										List<BNode> unionList = new ArrayList<BNode>(); //list for all the blank nodes that are part of the union
 		
@@ -407,24 +407,18 @@ public class NodeType
 										builder.add(RDFS.SUBCLASSOF, r11); 
 										builder.subject(r11);
 										builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
-									    builder.add(OWL.ONPROPERTY,attribute);
+									    builder.add(OWL.ONPROPERTY,attribute);//property some constraints
 										builder.add(OWL.SOMEVALUESFROM,constraints);
 										
 										BNode r12 = Values.bnode();
 										builder.subject(r12);
-										builder.add(RDF.TYPE, OWL.RESTRICTION); //property some constraints
-									    builder.add(OWL.ONPROPERTY,constraints);
+										builder.add(RDF.TYPE, OWL.RESTRICTION); 
+									    builder.add(OWL.ONPROPERTY,constraints);//constraints some length
 										builder.add(OWL.SOMEVALUESFROM,constr);
-										
-										BNode r13 = Values.bnode();
-										builder.subject(r13);
-										builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
-									    builder.add(OWL.ONPROPERTY,constraints);
-										builder.add(OWL.SOMEVALUESFROM,constr);
-										
+									
 										BNode r14 = Values.bnode();
 										builder.subject(r14);
-										builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
+										builder.add(RDF.TYPE, OWL.RESTRICTION); 
 									    builder.add(OWL.ONPROPERTY,constr);
 										builder.add(OWL.HASVALUE,val);								
 									}
@@ -552,7 +546,7 @@ public class NodeType
 							builder.subject(bnodes.get(b)); 
 							builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property protocol
 						    builder.add(OWL.ONPROPERTY,valid_source_types);
-							builder.add(OWL.HASVALUE,ex+temp);
+							builder.add(OWL.ALLVALUESFROM,ex+temp);
 				            b++;
 						}
 						  BNode head2 = Values.bnode(); // blank node for the head of the list
@@ -578,6 +572,8 @@ public class NodeType
 			}
 		}
 		Parse.m = builder.build();
+		Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
+
 		WriteFiles.Create();
 		String url=Parse.repo;
 		HTTPRepository repository = new HTTPRepository(url);

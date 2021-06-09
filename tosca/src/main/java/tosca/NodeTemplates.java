@@ -132,6 +132,51 @@ public class NodeTemplates
 				}
 			}
 			
+			//for properties
+			if(a[0]!=0)
+			{
+				a[0]=0;
+				third_level = (HashMap<String, Object>) second_level.get("attributes");
+				for (int j = 0; j < attribute_names.size(); j++) 
+				{
+					String key1 = attribute_names.get(j);
+					String value = third_level.get(attribute_names.get(j)).toString();
+					
+					if(value.contains("{")) //if property has more levels
+					{  
+						int v=0;
+						BNode head = Values.bnode();
+						builder.add(tosca+key1, head)
+						.subject(head);
+						fourth_level = (HashMap<String, Object>) third_level.get(key1);
+						List<BNode> levelList = new ArrayList<BNode>();
+						for (Object key4 : fourth_level.keySet())  
+						{
+							vars.add(Values.bnode());
+							levelList.add(vars.get(v));
+							fifth_level=(HashMap<String, Object>)fourth_level.get(key4);
+							builder.subject(vars.get(v));
+							for (String key5 : fifth_level.keySet()) 
+							{
+								builder.add(tosca+key5, fifth_level.get(key5));
+							}
+							v++;
+
+						}
+						
+					    RDFCollections.asRDF(levelList, head, builder.build());
+					
+					 }
+					 else
+					 {
+						builder.subject(tosca+template_name);
+						builder.add(tosca+key, value);
+					 }			
+					
+				}
+			}
+			
+			//for requirements
 			if(r[0]!=0)
 			{
 				r[0]=0;

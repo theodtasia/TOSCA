@@ -1,7 +1,10 @@
-data_types:
- sodalite.datatypes.OpenStack.SecurityRule:  
-  derived_from: tosca.datatypes.Root 
+node_types:
+ sodalite.nodes.OpenStack.VM:
+  derived_from: tosca.nodes.Compute
   properties:  
+   network:  
+    description: "OpenStack network id (network names are not accepted)" 
+    type: string 
    protocol:  
     required: true 
     type: string 
@@ -13,21 +16,7 @@ data_types:
     type: tosca.datatypes.network.PortDef 
     constraints:  
      max_length: "1" 
-   port_range_max:  
-    type: tosca.datatypes.network.PortDef 
-    required: true 
-   remote_ip_prefix:  
-    default: "0.0.0.0/0" 
-    required: true 
-    type: string
-node_types:
- sodalite.nodes.DockerHost:  
-  derived_from: tosca.nodes.SoftwareComponent
-  attributes:
-   public_address:
-    description: "Host's IP"
-    type: string
   capabilities:  
-     host:  
-        type: tosca.capabilities.Node
-        valid_source_types: [sodalite.nodes.DockerizedComponent,sodalite.nodes.Trial] 
+   feature:  
+    type: tosca.capabilities.Node
+    valid_source_types: [sodalite.nodes.DockerizedComponent,sodalite.nodes.Trial] 
