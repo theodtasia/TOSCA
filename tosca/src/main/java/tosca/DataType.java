@@ -17,7 +17,6 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 
@@ -32,23 +31,23 @@ public class DataType
 		String data_name = null;
 		Object derived_from = null;
 		HashMap<String, Object> map2 = new HashMap<>();
-		ArrayList<String> properties_names = new ArrayList<>(); //save the properties name for using the later
-		HashMap<String, Object> second_level = map2;
-		HashMap<String, Object> third_level = map2;
-		HashMap<String, Object> fourth_level = map2;
-		HashMap<String, Object> fifth_level = map2;
+		
 		String ex = "https://intelligence.csd.auth.gr/ontologies/tosca/";
 		map2 = map.getMap().get("data_types");
-    	
+		ModelBuilder builder = new ModelBuilder();
     	final int p[]= {0};
 		for (String key : map2.keySet()) 
 		{
+			ArrayList<String> properties_names = new ArrayList<>(); //save the properties name for using the later
+			HashMap<String, Object> second_level = map2;
+			HashMap<String, Object> third_level = map2;
+			HashMap<String, Object> fourth_level = map2;
+			HashMap<String, Object> fifth_level = map2;
 			data_name = key;
 			IRI tosca_description = null;
 			IRI toscaDefault = null;
 			IRI toscaType = null;
 			IRI toscaProperty= null;
-			ModelBuilder builder = new ModelBuilder();
 			builder.setNamespace("ex", "https://intelligence.csd.auth.gr/ontologies/tosca/").subject("ex:" + data_name)
 			.add(RDF.TYPE, OWL.CLASS);
 			
@@ -67,7 +66,7 @@ public class DataType
 			
 			
 			// second level of hashmap
-			// key names = [derived_from,properties,entry_schema,constraints]
+			// key names = [derived_from,properties,entry_schema]
 			
 			second_level = ((HashMap<String, Object>) map2.get(data_name));
 			for (String key2 : second_level.keySet()) 
@@ -100,16 +99,25 @@ public class DataType
 				//for entry schema
 				else if (key2.equals("entry_schema")) 
 				{
-					IRI entry_schema = Values.iri(ex,"entry_schema");
-					if ((fifth_level.get("type").equals("string")) || (fifth_level.get("type").equals("integer")) ||(fifth_level.get("type").equals("float")) || (fifth_level.get("type").equals("boolean")))
-					{
-						builder.add(entry_schema,RDF.TYPE,"owl:DatatypeProperty");
-						builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+					third_level=(HashMap<String, Object>) second_level.get("entry_schema");
+					if ((third_level.get("type").equals("string")) || (third_level.get("type").equals("integer")) ||(third_level.get("type").equals("float")) || (third_level.get("type").equals("boolean")))
+					{	
+						IRI entry_schema_datatypeproperty = Values.iri(ex,"entry_schema_datatypeproperty");
+						builder.add(entry_schema_datatypeproperty,RDF.TYPE,"owl:DatatypeProperty");
+						builder.add(entry_schema_datatypeproperty,RDFS.RANGE,(String) third_level.get("type"));	
 					}
 					else
 					{
-						builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
-						builder.add(entry_schema,RDFS.RANGE,ex+fourth_level.get("type"));	
+						    IRI entry_schema_objectproperty = Values.iri(ex,"entry_schema_objectproperty");	
+							builder.add(entry_schema_objectproperty,RDF.TYPE,"owl:ObjectProperty");
+							BNode r17 = Values.bnode();
+							builder.subject("ex:"+data_name);
+							builder.add(RDFS.SUBCLASSOF, r17);
+							builder.subject(r17);
+							builder.add(RDF.TYPE, OWL.RESTRICTION);
+							builder.add(OWL.ONPROPERTY, entry_schema_objectproperty);
+							builder.add(OWL.SOMEVALUESFROM,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + (String) third_level.get("type")));
+							
 					}
 				
 				}
@@ -132,7 +140,7 @@ public class DataType
 					{
 						fourth_level = (HashMap<String, Object>) third_level.get(properties_names.get(j));						
 						
-						// check if the propertys type is a datatypeProperty or objectProperty toscaType
+						// check if the properties type is a datatypeProperty or objectProperty toscaType
 						if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
 						{
 							builder.add(properties,RDF.TYPE,"owl:DatatypeProperty");
@@ -143,12 +151,21 @@ public class DataType
 						else if(((String) fourth_level.get("type")).startsWith("tosca"))
 						{
 							builder.add(properties,RDF.TYPE,"owl:ObjectProperty");
-							builder.add(properties,RDFS.RANGE,ex+fourth_level.get("type"));
+							{
+								builder.add(properties,RDF.TYPE,"owl:ObjectProperty");
+								BNode r15 = Values.bnode();
+								builder.subject("ex:"+data_name);
+								builder.add(RDFS.SUBCLASSOF, r15);
+								builder.subject(r15);
+								builder.add(RDF.TYPE, OWL.RESTRICTION);
+								builder.add(OWL.ONPROPERTY, properties);
+								builder.add(OWL.SOMEVALUESFROM,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + fourth_level.get("type")));
+							}
 
 						}
 						else 
 						{
-							builder.add(properties,RDF.TYPE,"owl:DatatypeProperty");
+							builder.add(properties,RDF.TYPE,"owl:ObjectProperty");
 							builder.add(properties,toscaType,fourth_level.get("type"));
 
 						}
@@ -169,16 +186,30 @@ public class DataType
 						//for entry_schema
 						if (fourth_level.get("entry_schema") != null) 
 						{
-							IRI entry_schema = Values.iri(ex,"entry_schema");
+							fifth_level=(HashMap<String, Object>) fourth_level.get("entry_schema");
 							if ((fifth_level.get("type").equals("string")) || (fifth_level.get("type").equals("integer")) ||(fifth_level.get("type").equals("float")) || (fifth_level.get("type").equals("boolean")))
 							{
-								builder.add(entry_schema,RDF.TYPE,"owl:DatatypeProperty");
-								builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+								IRI property_entry_schema_dataproperty = Values.iri(ex,"property_entry_schema_dataproperty");
+								builder.add(property_entry_schema_dataproperty,RDF.TYPE,"owl:DatatypeProperty");
+								builder.add(property_entry_schema_dataproperty,RDFS.RANGE,(String) fifth_level.get("type"));	
 							}
+							
 							else
 							{
-								builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
-								builder.add(entry_schema,RDFS.RANGE,ex+fourth_level.get("type"));	
+								IRI property_entry_schema_objectproperty = Values.iri(ex,"property_entry_schema_objectproperty");
+								builder.add(property_entry_schema_objectproperty,RDF.TYPE,"owl:ObjectProperty");
+								BNode r18 = Values.bnode();
+								builder.subject("ex:"+data_name);
+								builder.add(RDFS.SUBCLASSOF, r18);
+								builder.subject(r18);
+								builder.add(RDF.TYPE, OWL.RESTRICTION);
+								builder.add(OWL.ONPROPERTY, properties);
+								BNode r14 = Values.bnode();
+								builder.add(OWL.SOMEVALUESFROM,r14);	
+								builder.subject(r14);
+								builder.add(RDF.TYPE, OWL.RESTRICTION); 
+							    builder.add(OWL.SOMEVALUESFROM,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + (String) fifth_level.get("type")));	
+								builder.add(OWL.ONPROPERTY,property_entry_schema_objectproperty);	
 							}
 						}
 						
@@ -212,7 +243,7 @@ public class DataType
                                         bnodes.add(Values.bnode()); //add a bnode to the bnode list
 										unionList.add(bnodes.get(b)); //add the bnode to the union list
 										builder.subject(bnodes.get(b)); 
-										builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property protocol
+										builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
 									    builder.add(OWL.ONPROPERTY,properties);
 										builder.add(OWL.HASVALUE,temp);
 							            b++;
@@ -231,21 +262,26 @@ public class DataType
 									builder.subject("ex:"+data_name); //set subject to the class
 									builder.add(RDFS.SUBCLASSOF, r11); 
 									builder.subject(r11);
+									
 									builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
 								    builder.add(OWL.ONPROPERTY,properties);
-									builder.add(OWL.SOMEVALUESFROM,constraints);
 									
 									BNode r12 = Values.bnode();
 									builder.subject(r12);
-									builder.add(RDF.TYPE, OWL.RESTRICTION); //property some constraints
-								    builder.add(OWL.ONPROPERTY,constraints);
-									builder.add(OWL.SOMEVALUESFROM,constr);
+									BNode r13 = Values.bnode();
+									builder.add(RDFS.SUBCLASSOF, r13); 
 									
-									BNode r14 = Values.bnode();
+									builder.subject(r13);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); 
+								    builder.add(OWL.ONPROPERTY,constraints);
+								    
+								    BNode r14 = Values.bnode();
+									builder.add(OWL.SOMEVALUESFROM,r14);
+									
 									builder.subject(r14);
-									builder.add(RDF.TYPE, OWL.RESTRICTION); //constraints some length
-								    builder.add(OWL.ONPROPERTY,constr);
-									builder.add(OWL.HASVALUE,val);								
+									builder.add(RDF.TYPE, OWL.RESTRICTION); 
+								    builder.add(OWL.HASVALUE,val);
+									builder.add(OWL.ONPROPERTY,constr);		
 								}
 							}
 							
@@ -281,34 +317,33 @@ public class DataType
 					}
 					
 				}	
-			}
-		
-			
-		
-		Parse.m = builder.build();
-		Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
-		WriteFiles.Create();
-		
-		String url=Parse.repo;
-
-		HTTPRepository repository = new HTTPRepository(url);
-        String baseURI = url;
-        File file = new File("data_type.ttl");
-        try {
-           RepositoryConnection con = repository.getConnection();
-           try 
-           {
-              con.add(file, baseURI, RDFFormat.TURTLE);
-           }
-           finally {
-              con.close();
-           }
-        }
-        catch (RDF4JException e) 
-        {
-           // handle exception
-        }
+			}	
 		}
+		Parse.m = builder.build();
+		WriteFiles.Create();	
+		String url=Parse.repo;
+		if(url!=null)
+		{
+			HTTPRepository repository = new HTTPRepository(url);
+			String baseURI = url;
+			File file = new File("data_type.ttl");
+			try {
+				RepositoryConnection con = repository.getConnection();
+				try 
+				{
+					con.add(file, baseURI, RDFFormat.TURTLE);
+				}
+				finally 
+				{
+					con.close();
+				}
+			}
+			catch (RDF4JException e) 
+			{
+           // handle exception
+			}
+		}
+	 
 	}
 	
 }

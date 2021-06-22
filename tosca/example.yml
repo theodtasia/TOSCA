@@ -1,22 +1,144 @@
-node_types:
- sodalite.nodes.OpenStack.VM:
-  derived_from: tosca.nodes.Compute
-  properties:  
-   network:  
-    description: "OpenStack network id (network names are not accepted)" 
-    type: string 
-   protocol:  
+data_types:
+ sodalite.datatypes.OpenStack.SecurityRule:  
+  derived_from: tosca.datatypes.Root 
+  properties:
+   protocol:
     required: true 
     type: string 
     default: "tcp" 
-    constraints:  
-     valid_values: ['tcp', 'udp', 'icmp'] 
-   port_range_min:  
+    constraints:
+     valid_values: ['tcp', 'udp', 'icmp']    
+   port_range_min:
     required: true 
     type: tosca.datatypes.network.PortDef 
-    constraints:  
-     max_length: "1" 
+   port_range_max: 
+    type: tosca.datatypes.network.PortDef 
+    required: true
+   remote_ip_prefix:      
+    default: "0.0.0.0/0" 
+    required: true 
+    type: string
+
+node_types:
+ sodalite.nodes.DockerHost:
+  derived_from: tosca.nodes.SoftwareComponent
+  attributes:
+   public_address:
+    description: "Host's IP"
+    type: string
+  properties:
+   public_address:
+    description: "Host's IP"
+    type: string
+  capabilities:  
+   host:
+    type: tosca.capabilities.Node
+    valid_source_types: [sodalite.nodes.DockerizedComponent] 
+ sodalite.nodes.OpenStack.VM:  
+  derived_from: tosca.nodes.Compute 
+  properties:  
+   network:
+    description: "OpenStack network id (network names are not accepted)"      
+    type: string 
+   name:
+    description: "Name that should be given to the VM in OpenStack"
+    type: string    
+   security_groups:
+    description: "OpenStack names of the security groups to which the instance should be added.Comma separated string." 
+    type: string 
+   flavor:  
+    description: "OpenStack flavor id (flavor names are not accepted)"
+    type: string 
+   image:  
+    description: "OpenStack image id (image names are not accepted)"
+    type: string 
+   key_name:  
+    description: "OpenStack SSH key name that should be placed on the VM"
+    type: string 
+   username:  
+    description: 'Username for SSH connection' 
+    type: string   
+   include_exporter:
+    description: 'Flag to include exporter'
+    type: boolean
+    default: 'true'
+    required: false   
+   timeout:
+    description: 'Timeout to instantiate the VM'
+    type: integer
+    default: '600'
+    required: false 
+   floating_ip_pools:
+    description: 'Name of floating IP pool from which to choose a floating IP'
+    type: string
+    default: ""
+    required: false 
+   userdata:
+    description: 'Additional userdata applied to configure the VM'
+    type: string
+    default: ""
+    required: false 
+  attributes:  
+   id:
+    description: "OpenStack id of the VM"
+    type: string 
+   ansible_ip:  
+    description: "ansible ipv4"
+    type: string 
   capabilities:  
    feature:  
-    type: tosca.capabilities.Node
-    valid_source_types: [sodalite.nodes.DockerizedComponent,sodalite.nodes.Trial] 
+    type: tosca.capabilities.Node 
+ sodalite.nodes.OpenStack.SecurityRules:  
+  derived_from: tosca.nodes.Root 
+  properties:  
+   group_name:  
+    description: "Name of the security group in openstack."
+    required: true 
+    type: string 
+   ports:  
+    required: false 
+    constraints:  
+    min_length: "1" 
+    type: map 
+    entry_schema:
+     type: sodalite.datatypes.OpenStack.SecurityRule 
+   group_description:  
+    description: "Description of the security group in openstack"
+    required: true 
+    type: string 
+   
+node_templates:
+ snow-security-rules:
+  type: sodalite.nodes.OpenStack.SecurityRules 
+  properties:
+   ports:
+    component_ports:
+     port_range_max: 8081 
+     remote_ip_prefix: "0.0.0.0/0" 
+     port_range_min: 8080 
+     protocol: "tcp" 
+    http_port:
+     port_range_min: 80 
+     port_range_max: 80 
+     protocol: "tcp" 
+     remote_ip_prefix: "0.0.0.0/0" 
+     group_name:  "snow" 
+     group_description:  "Snow UC security group"
+ snow-vm:
+  type: sodalite.nodes.OpenStack.VM
+  properties:
+   key_name: "ssh-key-name"
+   image: "image-name"
+   name:  "snow-vm_am_1"
+   network: "openstack-network-name"  
+   security_groups: "security-groups"
+   flavor: "flavor-name"
+   username: "centos"
+  requirements:
+   protected_by:
+    node: snow-security-rules
+ snow-docker-host:
+  type: sodalite.nodes.DockerHost 
+  requirements:
+   host:
+    node: snow-vm

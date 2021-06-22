@@ -19,7 +19,6 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 //class for handling node types
-import org.eclipse.rdf4j.rio.Rio;
 
 public class NodeType 
 {
@@ -33,27 +32,28 @@ public class NodeType
 		String node_name = null;
 		Object derived_from = null;
 		HashMap<String, Object> map2 = new HashMap<>();
-		ArrayList<String> attribute_names = new ArrayList<>();
-		ArrayList<String> properties_names = new ArrayList<>();
-		ArrayList<String> capabilities_names = new ArrayList<>();
-		HashMap<String, Object> second_level = map2;
-		HashMap<String, Object> third_level = map2;
-		HashMap<String, Object> fourth_level = map2;
-		HashMap<String, Object> fifth_level = map2;
 		String ex = "https://intelligence.csd.auth.gr/ontologies/tosca/";
 		map2 = map.getMap().get("node_types");
     	final int c[]= {0};
     	final int a[]= {0};
     	final int p[]= {0};
+		ModelBuilder builder = new ModelBuilder();
+
 		for (String key : map2.keySet()) 
 		{
+			ArrayList<String> attribute_names = new ArrayList<>();
+			ArrayList<String> properties_names = new ArrayList<>();
+			ArrayList<String> capabilities_names = new ArrayList<>();
+			HashMap<String, Object> second_level = map2;
+			HashMap<String, Object> third_level = map2;
+			HashMap<String, Object> fourth_level = map2;
+			HashMap<String, Object> fifth_level = map2;
 			node_name = key;
 			IRI tosca_description = null;
 			IRI toscaDefault = null;
 			IRI toscaType = null;
 			IRI requirements = null;
 			IRI toscaProperty= null;
-			ModelBuilder builder = new ModelBuilder();
 			builder.setNamespace("ex", "https://intelligence.csd.auth.gr/ontologies/tosca/").subject("ex:" + node_name)
 			.add(RDF.TYPE, OWL.CLASS);
 			
@@ -72,15 +72,12 @@ public class NodeType
 			.add(toscaProperty,RDF.TYPE,OWL.ANNOTATIONPROPERTY)
 			.add(toscaProperty,RDFS.RANGE,"boolean");
 			
-			
-			//System.out.println(key);
+			// second level of hashmap
+			// key names = [derived_from,properties,attributes,entry_schema,capabilities]
 			second_level = ((HashMap<String, Object>) map2.get(node_name));
 			for (String key2 : second_level.keySet()) 
 			{	
 				
-				
-
-				//System.out.println(key2);
 				if (key2.equals("derived_from")) 
 				{
 					derived_from = second_level.get("derived_from"); 
@@ -108,25 +105,24 @@ public class NodeType
 				} 
 				else if (key2.equals("capabilities")) 
 				{
-					c[0]=1;	
+					
 					third_level = (HashMap<String, Object>) second_level.get("capabilities");
+					c[0]=1;	
 					for (String key3 : third_level.keySet()) 
 					{
 						capabilities_names.add(key3);
 				    }
 				}
+				
 				else if(key2.equals("description")) 
 				{
 					builder.add(node_name,tosca_description,Values.literal(fourth_level.get("description")));
 				}
-
+		
 		    }
 			
 		
-			
-
-
-
+		
 			//for properties
 			if(p[0]!=0)
 			{
@@ -139,7 +135,6 @@ public class NodeType
 					if (third_level.get(properties_names.get(j)) != null) 
 					{
 						fourth_level = (HashMap<String, Object>) third_level.get(properties_names.get(j));
-						//System.out.println(fourth_level);
 						
 						// check if the type is "normal" datatype or toscaType
 						if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
@@ -151,12 +146,17 @@ public class NodeType
 						else if(((String) fourth_level.get("type")).startsWith("tosca"))
 						{
 							builder.add(properties,RDF.TYPE,"owl:ObjectProperty");
-							builder.add(properties,RDFS.RANGE,ex+fourth_level.get("type"));
-
+							BNode r25 = Values.bnode();
+							builder.subject("ex:"+node_name);
+							builder.add(RDFS.SUBCLASSOF, r25);
+							builder.subject(r25);
+							builder.add(RDF.TYPE, OWL.RESTRICTION);
+							builder.add(OWL.ONPROPERTY, properties);
+							builder.add(OWL.SOMEVALUESFROM,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + fourth_level.get("type")));
 						}
 						else
 						{
-							builder.add(properties,RDF.TYPE,"owl:DatatypeProperty");
+							builder.add(properties,RDF.TYPE,"owlObjectProperty");
 							builder.add(properties,toscaType,fourth_level.get("type"));
 
 						}
@@ -177,19 +177,30 @@ public class NodeType
 						//for entry schema
 						if (fourth_level.get("entry_schema") != null) 
 						{
-							
-							IRI entry_schema = Values.iri(ex,"entry_schema");
+							fifth_level=(HashMap<String, Object>) fourth_level.get("entry_schema");
 							if ((fifth_level.get("type").equals("string")) || (fifth_level.get("type").equals("integer")) ||(fifth_level.get("type").equals("float")) || (fifth_level.get("type").equals("boolean")))
-							{
-								builder.add(entry_schema,RDF.TYPE,"owl:DatatypeProperty");
-								builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+							{								
+								IRI property_entry_schema_dataproperty = Values.iri(ex,"property_entry_schema_dataproperty");
+								builder.add(property_entry_schema_dataproperty,RDF.TYPE,"owl:DatatypeProperty");
+								builder.add(property_entry_schema_dataproperty,RDFS.RANGE,fifth_level.get("type"));	
 							}
 							else
 							{
-								builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
-								builder.add(entry_schema,RDFS.RANGE,ex+fourth_level.get("type"));	
+								IRI property_entry_schema_objectproperty= Values.iri(ex,"property_entry_schema_objectproperty");
+								builder.add(property_entry_schema_objectproperty,RDF.TYPE,"owl:ObjectProperty");
+								BNode r18 = Values.bnode();
+								builder.subject("ex:"+node_name);
+								builder.add(RDFS.SUBCLASSOF, r18);
+								builder.subject(r18);
+								builder.add(RDF.TYPE, OWL.RESTRICTION);
+								builder.add(OWL.ONPROPERTY, properties);
+								BNode r14 = Values.bnode();
+								builder.add(OWL.SOMEVALUESFROM,r14);	
+								builder.subject(r14);
+								builder.add(RDF.TYPE, OWL.RESTRICTION); 
+							    builder.add(OWL.SOMEVALUESFROM,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + fifth_level.get("type")) );	
+								builder.add(OWL.ONPROPERTY,property_entry_schema_objectproperty);
 							}
-							builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
 						}
 				
 						//for required
@@ -197,10 +208,10 @@ public class NodeType
 						{											
 							if(fourth_level.get("required").equals(true))
 							{
-								BNode r1 = Values.bnode();
+								BNode r21 = Values.bnode();
 								builder.subject("ex:"+node_name);
-								builder.add(RDFS.SUBCLASSOF, r1);
-								builder.subject(r1);
+								builder.add(RDFS.SUBCLASSOF, r21);
+								builder.subject(r21);
 								builder.add(RDF.TYPE, OWL.RESTRICTION);
 								builder.add(OWL.ONPROPERTY, properties);
 								builder.add(OWL.MINCARDINALITY, 1);
@@ -208,10 +219,10 @@ public class NodeType
 							}
 							else if(fourth_level.get("required").equals(false))
 							{
-								BNode r2 = Values.bnode();
+								BNode r22 = Values.bnode();
 								builder.subject("ex:"+node_name);
-								builder.add(RDFS.SUBCLASSOF, r2);
-								builder.subject(r2);
+								builder.add(RDFS.SUBCLASSOF, r22);
+								builder.subject(r22);
 								builder.add(RDF.TYPE, OWL.RESTRICTION);
 								builder.add(OWL.ONPROPERTY, properties);
 								builder.add(OWL.MINCARDINALITY, 0);
@@ -239,10 +250,10 @@ public class NodeType
 									ArrayList<BNode> bnodes = new ArrayList<BNode>(listval.size()); //arraylist for the bnodes that we will need 
 									List<BNode> unionList = new ArrayList<BNode>(); //list for all the blank nodes that are part of the union
 	
-									BNode r6 = Values.bnode(); 
+									BNode r26 = Values.bnode(); 
 									builder.subject("ex:"+node_name); //set subject to the class
-									builder.add(RDFS.SUBCLASSOF, r6); 
-									builder.subject(r6);
+									builder.add(RDFS.SUBCLASSOF, r26); 
+									builder.subject(r26);
 									int b=0;//counter
 									
 									for (Object temp : listval) //for each element in valid values list
@@ -259,31 +270,34 @@ public class NodeType
 
 									  RDFCollections.asRDF(unionList, head, builder.build());
 
-				 					  builder.subject(r6).add(RDF.TYPE, OWL.CLASS).add(OWL.UNIONOF, head);
+				 					  builder.subject(r26).add(RDF.TYPE, OWL.CLASS).add(OWL.UNIONOF, head);
 									
 								}
 								if(cons.equals("min_length")||cons.equals("max_length"))
 								{
 									builder.add(constr,RDFS.RANGE,"string");
-									BNode r11 = Values.bnode();
+									BNode r21 = Values.bnode();
 									builder.subject("ex:"+node_name); //set subject to the class
-									builder.add(RDFS.SUBCLASSOF, r11); 
-									builder.subject(r11);
-									builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
-								    builder.add(OWL.ONPROPERTY,properties);//property some constraints
-									builder.add(OWL.SOMEVALUESFROM,constraints);
+									builder.add(RDFS.SUBCLASSOF, r21); 
+									builder.subject(r21);
 									
-									BNode r12 = Values.bnode();
-									builder.subject(r12);
+									builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
+								    builder.add(OWL.ONPROPERTY,properties);
+									
+									BNode r23 = Values.bnode();
+									builder.add(RDFS.SUBCLASSOF, r23); 
+									
+									builder.subject(r23);
 									builder.add(RDF.TYPE, OWL.RESTRICTION); 
 								    builder.add(OWL.ONPROPERTY,constraints);
-									builder.add(OWL.SOMEVALUESFROM,constr);//constraints some length
+								    
+								    BNode r24 = Values.bnode();
+									builder.add(OWL.SOMEVALUESFROM,r24);
 									
-									BNode r14 = Values.bnode();
-									builder.subject(r14);
+									builder.subject(r24);
 									builder.add(RDF.TYPE, OWL.RESTRICTION); 
-								    builder.add(OWL.ONPROPERTY,constr);
-									builder.add(OWL.HASVALUE,val);								
+								    builder.add(OWL.HASVALUE,val);
+									builder.add(OWL.ONPROPERTY,constr);								
 								}
 								
 							}
@@ -312,21 +326,26 @@ public class NodeType
 						//checking type
 						if (fourth_level.get("type") != null) 
 						{
-							if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
+							if (((String) fourth_level.get("type")).equals("string") || ((String) fourth_level.get("type")).equals("integer") || ((String) fourth_level.get("type")).equals("float") || ((String) fourth_level.get("type")).equals("boolean"))
 							{
 								builder.add(attribute,RDF.TYPE,"owl:DatatypeProperty");
-								builder.add(attribute,RDFS.RANGE,fourth_level.get("type"));
+								builder.add(attribute,RDFS.RANGE,(String) fourth_level.get("type"));
 			
 							}
-							else if(((String) fourth_level.get("type")).startsWith("tosca"))
+							else if(((String) fourth_level.get("type")).startsWith("tosca"))	
 							{
 								builder.add(attribute,RDF.TYPE,"owl:ObjectProperty");
-								builder.add(attribute,RDFS.RANGE,ex+fourth_level.get("type"));
-
+								BNode r35 = Values.bnode();
+								builder.subject("ex:"+node_name);
+								builder.add(RDFS.SUBCLASSOF, r35);
+								builder.subject(r35);
+								builder.add(RDF.TYPE, OWL.RESTRICTION);
+								builder.add(OWL.ONPROPERTY, attribute);
+								builder.add(OWL.SOMEVALUESFROM,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + (String) fourth_level.get("type")));
 							}
 							else
 							{
-								builder.add(attribute,RDF.TYPE,"owl:DatatypeProperty");
+								builder.add(attribute,RDF.TYPE,"owl:ObjectProperty");
 								builder.add(attribute,toscaType,fourth_level.get("type"));
 							}
 						}
@@ -340,16 +359,30 @@ public class NodeType
 						//for entry_schema
 						if (fourth_level.get("entry_schema") != null) 
 						{
-							IRI entry_schema = Values.iri(ex,"entry_schema");
+							fifth_level=(HashMap<String, Object>) fourth_level.get("entry_schema");
 							if ((fifth_level.get("type").equals("string")) || (fifth_level.get("type").equals("integer")) ||(fifth_level.get("type").equals("float")) || (fifth_level.get("type").equals("boolean")))
 							{
-								builder.add(entry_schema,RDF.TYPE,"owl:DatatypeProperty");
-								builder.add(entry_schema,RDFS.RANGE,fourth_level.get("type"));	
+								IRI property_entry_schema_dataproperty = Values.iri(ex,"property_entry_schema_dataproperty");
+								builder.add(property_entry_schema_dataproperty,RDF.TYPE,"owl:DatatypeProperty");
+								builder.add(property_entry_schema_dataproperty,RDFS.RANGE,fifth_level.get("type"));	
 							}
 							else
 							{
-								builder.add(entry_schema,RDF.TYPE,"owl:ObjectProperty");
-								builder.add(entry_schema,RDFS.RANGE,ex+fourth_level.get("type"));	
+
+								IRI property_entry_schema_objectproperty = Values.iri(ex,"property_entry_schema_objectproperty");
+								builder.add(property_entry_schema_objectproperty,RDF.TYPE,"owl:ObjectProperty");
+								BNode r38 = Values.bnode();
+								builder.subject("ex:"+node_name);
+								builder.add(RDFS.SUBCLASSOF, r38);
+								builder.subject(r38);
+								builder.add(RDF.TYPE, OWL.RESTRICTION);
+								builder.add(OWL.ONPROPERTY, attribute);
+								BNode r34 = Values.bnode();
+								builder.add(OWL.SOMEVALUESFROM,r34);	
+								builder.subject(r34);
+								builder.add(RDF.TYPE, OWL.RESTRICTION); 
+							    builder.add(OWL.SOMEVALUESFROM,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + fifth_level.get("type")));	
+								builder.add(OWL.ONPROPERTY,property_entry_schema_objectproperty);	
 							}
 						}
 						
@@ -376,10 +409,10 @@ public class NodeType
 										ArrayList<BNode> bnodes = new ArrayList<BNode>(listval.size()); //arraylist for the bnodes that we will need 
 										List<BNode> unionList = new ArrayList<BNode>(); //list for all the blank nodes that are part of the union
 		
-										BNode r6 = Values.bnode(); 
+										BNode r46 = Values.bnode(); 
 										builder.subject("ex:"+node_name); //set subject to the class
-										builder.add(RDFS.SUBCLASSOF, r6); 
-										builder.subject(r6);
+										builder.add(RDFS.SUBCLASSOF, r46); 
+										builder.subject(r46);
 										int b=0;//counter
 										
 										for (Object temp : listval) //for each element in valid values list
@@ -396,31 +429,34 @@ public class NodeType
 
 										  RDFCollections.asRDF(unionList, head, builder.build());
 
-					 					  builder.subject(r6).add(RDF.TYPE, OWL.CLASS).add(OWL.UNIONOF, head);
+					 					  builder.subject(r46).add(RDF.TYPE, OWL.CLASS).add(OWL.UNIONOF, head);
 										
 									}
 									if(cons.equals("min_length")||cons.equals("max_length"))
 									{
 										builder.add(constr,RDFS.RANGE,"string");
-										BNode r11 = Values.bnode();
+										BNode r41 = Values.bnode();
 										builder.subject("ex:"+node_name); //set subject to the class
-										builder.add(RDFS.SUBCLASSOF, r11); 
-										builder.subject(r11);
-										builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
-									    builder.add(OWL.ONPROPERTY,attribute);//property some constraints
-										builder.add(OWL.SOMEVALUESFROM,constraints);
+										builder.add(RDFS.SUBCLASSOF, r41); 
+										builder.subject(r41);
 										
-										BNode r12 = Values.bnode();
-										builder.subject(r12);
+										builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
+									    builder.add(OWL.ONPROPERTY,attribute);
+										
+										BNode r43 = Values.bnode();
+										builder.add(RDFS.SUBCLASSOF, r43); 
+										
+										builder.subject(r43);
 										builder.add(RDF.TYPE, OWL.RESTRICTION); 
-									    builder.add(OWL.ONPROPERTY,constraints);//constraints some length
-										builder.add(OWL.SOMEVALUESFROM,constr);
-									
-										BNode r14 = Values.bnode();
-										builder.subject(r14);
+									    builder.add(OWL.ONPROPERTY,constraints);
+									    
+									    BNode r44 = Values.bnode();
+										builder.add(OWL.SOMEVALUESFROM,r44);
+										
+										builder.subject(r44);
 										builder.add(RDF.TYPE, OWL.RESTRICTION); 
-									    builder.add(OWL.ONPROPERTY,constr);
-										builder.add(OWL.HASVALUE,val);								
+									    builder.add(OWL.HASVALUE,val);
+										builder.add(OWL.ONPROPERTY,constr);									
 									}
 								}
 						}
@@ -431,20 +467,20 @@ public class NodeType
 							if(fourth_level.get("required").equals(true))
 							{
 								
-								BNode r3 = Values.bnode();
+								BNode r33 = Values.bnode();
 								builder.subject("ex:"+node_name);
-								builder.add(RDFS.SUBCLASSOF, r3);
-								builder.subject(r3);
+								builder.add(RDFS.SUBCLASSOF, r33);
+								builder.subject(r33);
 								builder.add(RDF.TYPE, OWL.RESTRICTION);
 								builder.add(OWL.ONPROPERTY, attribute);
 								builder.add(OWL.MINCARDINALITY, 1);
 							}
 							else if(fourth_level.get("required").equals(false))
 							{
-								BNode r4 = Values.bnode();
+								BNode r34 = Values.bnode();
 								builder.subject("ex:"+node_name);
-								builder.add(RDFS.SUBCLASSOF, r4);
-								builder.subject(r4);
+								builder.add(RDFS.SUBCLASSOF, r34);
+								builder.subject(r34);
 								builder.add(RDF.TYPE, OWL.RESTRICTION);
 								builder.add(OWL.ONPROPERTY, attribute);
 								builder.add(OWL.MINCARDINALITY, 0);
@@ -467,7 +503,6 @@ public class NodeType
 			c[0]=0;
 			third_level = (HashMap<String, Object>) second_level.get("capabilities");
 			IRI capabilities= Values.iri(ex,"capabilities");
-			
 			for (int j = 0; j < capabilities_names.size(); j++) 
 			{
 				IRI capability = Values.iri(ex,capabilities_names.get(j));
@@ -479,6 +514,12 @@ public class NodeType
             		type=1;
 
 				}
+            	//for description
+				if (fourth_level.get("description") != null) 
+				{
+					builder.add(capability,tosca_description,Values.literal(fourth_level.get("description")));
+				}
+				
             	
             	int valid=0;
 				IRI valid_source_types=Values.iri(ex,"valid_source_types");
@@ -490,49 +531,48 @@ public class NodeType
 				}
 		     	
 				//start
-				BNode r5 = Values.bnode();
-				BNode r6 = Values.bnode();
+				BNode r35 = Values.bnode();
+				BNode r36 = Values.bnode();
 				builder.subject("ex:"+node_name);
-				builder.add(RDFS.SUBCLASSOF, r5);
-				builder.subject(r5);
+				builder.add(RDFS.SUBCLASSOF, r35);
+				builder.subject(r35);
 				builder.add(RDF.TYPE, OWL.RESTRICTION);
 				builder.add(OWL.ONPROPERTY, capabilities);
-				builder.add(OWL.SOMEVALUESFROM,r6); 
+				builder.add(OWL.SOMEVALUESFROM,r36); 
 				
 				if(type!=0)
 				{
 				  if(valid==0) // if there is only host type
 				  {
-					builder.subject(r6);
+					builder.subject(r36);
 					builder.add(RDF.TYPE, OWL.RESTRICTION);
 					builder.add(OWL.ONPROPERTY, capability);
 					Object type_host=fourth_level.get("type");
-					builder.add(OWL.SOMEVALUESFROM,type_host);
+					builder.add(OWL.SOMEVALUESFROM,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + type_host));
 				  }
 				  
 				  else 	 //if there is valid source types 
 				  {
 					  //capabilities some ( host some tosca.capabilities.Node and host some 
-					  //(valid_source_types some hasvalue ... or has value)(
+					  //(valid_source_types some only ... or only)
 					  
-					  BNode r8 = Values.bnode(); // for host some valid source types ..
-					  BNode r9 = Values.bnode(); // for valid source types some..
+					  BNode r38 = Values.bnode(); // for host some type ..
+					  BNode r39 = Values.bnode(); // for host some valid source types 
+				      BNode r40= Values.bnode(); // for valid source types 
 
-                	  builder.subject(r8);// for host some tosca
+                	  builder.subject(r38);// for host some type
 					  builder.add(RDF.TYPE, OWL.RESTRICTION);
 				      builder.add(OWL.ONPROPERTY, capability);
 					  Object type_host=fourth_level.get("type");
-					  builder.add(OWL.SOMEVALUESFROM,ex+type_host);
+					  builder.add(OWL.SOMEVALUESFROM,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + type_host));
 
-				      BNode r20= Values.bnode();
-				      
-					  builder.subject(r9);
+					  builder.subject(r39); // for host some valid source types 
 					  builder.add(RDF.TYPE, OWL.RESTRICTION);
 				      builder.add(OWL.ONPROPERTY, capability);
-				      builder.add(OWL.SOMEVALUESFROM,r20);
+				      builder.add(OWL.SOMEVALUESFROM,r40);
 				 
 				      Object valid_host=fourth_level.get("valid_source_types");
-					  builder.subject(r20);
+					  builder.subject(r40);
 					  @SuppressWarnings("rawtypes")
 					  ArrayList listval = (ArrayList) valid_host;
 					  ArrayList<BNode> bnodes = new ArrayList<BNode>(listval.size()); //arraylist for the bnodes that we will need 
@@ -544,58 +584,59 @@ public class NodeType
                           bnodes.add(Values.bnode()); //add a bnode to the bnode list
 							unionList.add(bnodes.get(b)); //add the bnode to the union list
 							builder.subject(bnodes.get(b)); 
-							builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property protocol
+							builder.add(RDF.TYPE, OWL.RESTRICTION); //restriction on property
 						    builder.add(OWL.ONPROPERTY,valid_source_types);
-							builder.add(OWL.ALLVALUESFROM,ex+temp);
+						    builder.add(OWL.ALLVALUESFROM,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + temp));
 				            b++;
 						}
 						  BNode head2 = Values.bnode(); // blank node for the head of the list
 
 						  RDFCollections.asRDF(unionList, head2, builder.build());
 
-	 					  builder.subject(r20).add(RDF.TYPE, OWL.CLASS).add(OWL.UNIONOF, head2);
+	 					  builder.subject(r40).add(RDF.TYPE, OWL.CLASS).add(OWL.UNIONOF, head2);
 					
-	 					  List<BNode> intersectionList = new ArrayList<BNode>();
-	 					  intersectionList.add(r8);
+	 					  List<BNode> intersectionList = new ArrayList<BNode>();//list for all the blank nodes that are part of the intersection
+	 					  intersectionList.add(r38);
 					
-	 					  intersectionList.add(r9);
+	 					  intersectionList.add(r39);
 					  
 	 					  BNode head = Values.bnode();
 
 	 					  RDFCollections.asRDF(intersectionList, head, builder.build());
 
-	 					  builder.subject(r6).add(RDF.TYPE, OWL.CLASS).add(OWL.INTERSECTIONOF, head);
+	 					  builder.subject(r36).add(RDF.TYPE, OWL.CLASS).add(OWL.INTERSECTIONOF, head);
 
 				  }
 				}
 				
 			}
 		}
-		Parse.m = builder.build();
-		Rio.write(Parse.m, System.out, RDFFormat.TURTLE);
-
+		}
+		Parse.m = builder.build();		
 		WriteFiles.Create();
 		String url=Parse.repo;
-		HTTPRepository repository = new HTTPRepository(url);
-        String baseURI = url;
-		File file = new File("node_type.ttl");
-        try {
-           RepositoryConnection con = repository.getConnection();
-           try 
-           {
-              con.add(file, baseURI, RDFFormat.TURTLE);
-           }
-           finally {
-              con.close();
-           }
-        }
-        catch (RDF4JException e) 
-        {
+		if(url!=null)
+		{
+			HTTPRepository repository = new HTTPRepository(url);
+			String baseURI = url;
+			File file = new File("node_type.ttl");
+			try {
+				RepositoryConnection con = repository.getConnection();
+				try 
+				{
+					con.add(file, baseURI, RDFFormat.TURTLE);
+				}
+				finally {
+					con.close();
+				}
+			}
+			catch (RDF4JException e) 
+			{
            // handle exception
-        }
-
+			}
 
 		}
+	 }
 
 	}
-}
+

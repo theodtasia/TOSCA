@@ -9,8 +9,8 @@ import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.util.ModelBuilder;
-import org.eclipse.rdf4j.model.util.RDFCollections;
 import org.eclipse.rdf4j.model.util.Values;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
@@ -23,16 +23,10 @@ public class NodeTemplates
 	void nodeTemplates() throws IOException 
 	{	
 		String template_name = null;
+		
 		String type=null;
 		HashMap<String, Object> map2 = new HashMap<>();
-		HashMap<String, Object> second_level = map2;
-		HashMap<String, Object> third_level = map2;
-		HashMap<String, Object> fourth_level = map2;
-		HashMap<String, Object> fifth_level = map2;
 
-		ArrayList<String> attribute_names = new ArrayList<>();
-		ArrayList<String> properties_names = new ArrayList<>();
-		ArrayList<String> requirements_names = new ArrayList<>();;
 		final int r[]= {0};
     	final int a[]= {0};
     	final int p[]= {0};
@@ -40,8 +34,19 @@ public class NodeTemplates
 		ModelBuilder builder = new ModelBuilder();
 		String tosca = "https://intelligence.csd.auth.gr/ontologies/tosca/";
 		builder.setNamespace("tosca", "https://intelligence.csd.auth.gr/ontologies/tosca/");
+		IRI toscaTemplateProperty = Values.iri(tosca, "toscaTemplateProperty");
+		builder.subject(tosca + template_name)
+		.add(toscaTemplateProperty,RDF.TYPE,OWL.ANNOTATIONPROPERTY);
 		for (String key : map2.keySet()) 
 		{
+			HashMap<String, Object> second_level = map2;
+			HashMap<String, Object> third_level = map2;
+			HashMap<String, Object> fourth_level = map2;
+			HashMap<String, Object> fifth_level = map2;
+
+			ArrayList<String> attribute_names = new ArrayList<>();
+			ArrayList<String> properties_names = new ArrayList<>();
+			ArrayList<String> requirements_names = new ArrayList<>();;
 			template_name = key;
 			builder.subject(tosca+template_name);
 			IRI tosca_description = Values.iri(tosca,"tosca_description");
@@ -51,7 +56,7 @@ public class NodeTemplates
 					if (key2.equals("type")) 
 					{
 						type = (String) second_level.get("type"); 
-						builder.add(RDF.TYPE, tosca+type);
+						builder.add(RDF.TYPE, Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + type));
 					}
 					else if(key2.equals("description")) 
 					{
@@ -85,33 +90,33 @@ public class NodeTemplates
 							requirements_names.add(key3);
 					    }
 					}
-		    }
+			 }
+		    
+			
 			List<BNode> vars = new ArrayList<>();
 			
 			//for properties
 			if(p[0]!=0)
 			{
 				p[0]=0;
+				second_level = ((HashMap<String, Object>) map2.get(template_name));
 				third_level = (HashMap<String, Object>) second_level.get("properties");
 				for (int j = 0; j < properties_names.size(); j++) 
 				{
-					String key1 = properties_names.get(j);
+				    String key1 = properties_names.get(j);
 					String value = third_level.get(properties_names.get(j)).toString();
-					
 					if(value.contains("{")) //if property has more levels
 					{  
 						int v=0;
-						BNode head = Values.bnode();
-						builder.add(tosca+key1, head)
-						.subject(head);
 						fourth_level = (HashMap<String, Object>) third_level.get(key1);
-						List<BNode> levelList = new ArrayList<BNode>();
 						for (Object key4 : fourth_level.keySet())  
-						{
-							vars.add(Values.bnode());
-							levelList.add(vars.get(v));
+						{								
+							vars.add(Values.bnode()); 
+							builder.add(tosca+key1, vars.get(v)).subject(vars.get(v));
+							builder.add(toscaTemplateProperty, tosca+key4);
+							
 							fifth_level=(HashMap<String, Object>)fourth_level.get(key4);
-							builder.subject(vars.get(v));
+							builder.add(toscaTemplateProperty, tosca+key4);
 							for (String key5 : fifth_level.keySet()) 
 							{
 								builder.add(tosca+key5, fifth_level.get(key5));
@@ -119,43 +124,40 @@ public class NodeTemplates
 							v++;
 
 						}
-						
-					    RDFCollections.asRDF(levelList, head, builder.build());
-					
 					 }
 					 else
 					 {
 						builder.subject(tosca+template_name);
-						builder.add(tosca+key, value);
+						builder.add(tosca+key1, value);
 					 }			
-					
+				  
 				}
 			}
 			
-			//for properties
+			//for attributes
 			if(a[0]!=0)
 			{
 				a[0]=0;
 				third_level = (HashMap<String, Object>) second_level.get("attributes");
 				for (int j = 0; j < attribute_names.size(); j++) 
 				{
-					String key1 = attribute_names.get(j);
+				  String key1 = attribute_names.get(j);
+				  if(third_level.get(attribute_names.get(j)) != null)
+				  {	
 					String value = third_level.get(attribute_names.get(j)).toString();
 					
 					if(value.contains("{")) //if property has more levels
 					{  
 						int v=0;
-						BNode head = Values.bnode();
-						builder.add(tosca+key1, head)
-						.subject(head);
 						fourth_level = (HashMap<String, Object>) third_level.get(key1);
-						List<BNode> levelList = new ArrayList<BNode>();
 						for (Object key4 : fourth_level.keySet())  
-						{
+						{								
 							vars.add(Values.bnode());
-							levelList.add(vars.get(v));
+							builder.add(tosca+key1, vars.get(v)).subject(vars.get(v));
+							builder.add(toscaTemplateProperty, tosca+key4);
+
 							fifth_level=(HashMap<String, Object>)fourth_level.get(key4);
-							builder.subject(vars.get(v));
+							builder.add(toscaTemplateProperty, tosca+key4);
 							for (String key5 : fifth_level.keySet()) 
 							{
 								builder.add(tosca+key5, fifth_level.get(key5));
@@ -163,16 +165,13 @@ public class NodeTemplates
 							v++;
 
 						}
-						
-					    RDFCollections.asRDF(levelList, head, builder.build());
-					
 					 }
 					 else
 					 {
 						builder.subject(tosca+template_name);
-						builder.add(tosca+key, value);
+						builder.add(tosca+key1, value);
 					 }			
-					
+				  }
 				}
 			}
 			
@@ -180,49 +179,54 @@ public class NodeTemplates
 			if(r[0]!=0)
 			{
 				r[0]=0;
-				BNode r2 = Values.bnode();
-				BNode r3 = Values.bnode();
+				BNode r60 = Values.bnode();
+				BNode r61 = Values.bnode();
 				third_level = (HashMap<String, Object>) second_level.get("requirements");
 				IRI requirements= Values.iri(tosca,"requirements");
-
+				
 				for (int j = 0; j < requirements_names.size(); j++) 
 				{
 					builder.subject(tosca+template_name)
-					.add(requirements, r2);
+					.add(requirements, r60);
+					
 					Object key1 = requirements_names.get(j);
-					builder.subject(r2).add(tosca+key1, r3);
+					builder.subject(r60).add(tosca+key1, r61);
+					
 					fifth_level=(HashMap<String, Object>) third_level.get(key1);
 					for (String key5 : fifth_level.keySet()) 
 					{
-						builder.add(tosca+key5,tosca+fifth_level.get(key5));
+						builder.subject(r61);
+						builder.add(tosca+key5,Values.iri("https://intelligence.csd.auth.gr/ontologies/tosca/" + fifth_level.get(key5)));
 					}
 					
+				
 				}
 			}
-		}
-		
 
+		}
 		Parse.m = builder.build();
 		WriteFiles.Create();
 		String url=Parse.repo;
-		HTTPRepository repository = new HTTPRepository(url);
-        String baseURI = url;
-        File file = new File("node_templates.ttl");
-        try {
-           RepositoryConnection con = repository.getConnection();
-           try 
-           {
-              con.add(file, baseURI, RDFFormat.TURTLE);
-           }
-           finally {
-              con.close();
-           }
-        }
-        catch (RDF4JException e) 
-        {
+		if(url!=null)
+		{
+			HTTPRepository repository = new HTTPRepository(url);
+			String baseURI = url;
+			File file = new File("node_templates.ttl");
+			try {
+				RepositoryConnection con = repository.getConnection();
+				try 
+				{
+					con.add(file, baseURI, RDFFormat.TURTLE);
+				}
+				finally {
+					con.close();
+				}
+			}
+			catch (RDF4JException e) 
+			{
            // handle exception
-        }
-
+			}
+		}
 	}
+}
 	
-}	
