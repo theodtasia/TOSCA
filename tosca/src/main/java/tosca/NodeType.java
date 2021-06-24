@@ -18,6 +18,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
+
 //class for handling node types
 
 public class NodeType 
@@ -135,7 +136,6 @@ public class NodeType
 					if (third_level.get(properties_names.get(j)) != null) 
 					{
 						fourth_level = (HashMap<String, Object>) third_level.get(properties_names.get(j));
-						
 						// check if the type is "normal" datatype or toscaType
 						if ((fourth_level.get("type").equals("string")) || (fourth_level.get("type").equals("integer")) || (fourth_level.get("type").equals("float")) || (fourth_level.get("type").equals("boolean"))) 
 						{

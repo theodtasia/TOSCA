@@ -5,11 +5,9 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.yaml.snakeyaml.Yaml;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-
 import org.eclipse.rdf4j.http.protocol.Protocol;
 import org.eclipse.rdf4j.model.Model;
 
@@ -79,7 +77,7 @@ public class Parse
    
 	           }
 	   			//http://192.168.1.4:7200/repositories/tosca   
-	           
+	        
 	        } 
 	       catch (IOException ioe) 
 	       {

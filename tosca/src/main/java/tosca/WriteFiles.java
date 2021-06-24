@@ -8,6 +8,7 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;  
 
+//class for writing files
 public class WriteFiles 
 {
 	

@@ -19,6 +19,8 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 
+//class for handling capability types
+
 public class CapabilityType 
 {
 	Parse map = new Parse();
